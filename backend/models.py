@@ -18,7 +18,7 @@ class Customer(Base):
     __tablename__ = "customers"
     
     id = Column(Integer, primary_key=True, index=True)
-    qr_uuid = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, index=True)
+    qr_code_uuid = Column(UUID(as_uuid=True), default=uuid.uuid4, unique=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, nullable=False)
     mobile_number = Column(String, unique=True, nullable=False)
