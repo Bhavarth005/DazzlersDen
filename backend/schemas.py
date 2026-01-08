@@ -4,48 +4,42 @@ from datetime import datetime
 from uuid import UUID
 from decimal import Decimal
 
-class PricePlanBase(BaseModel):
-    plan_name: str
-    duration_minutes: int
-    price: Decimal
-
-class PricePlanCreate(PricePlanBase):
-    pass
-
-class PricePlanResponse(PricePlanBase):
-    id: int
-    model_config = ConfigDict(from_attributes=True)
-
 class CustomerBase(BaseModel):
     name: str
     mobile_number: str
-    email: Optional[EmailStr] = None 
+    birthdate: datetime
 
 class CustomerCreate(CustomerBase):
+    initial_balance: Optional[float] = 0
     pass
 
 class CustomerResponse(CustomerBase):
-    id: int
+    c_id: int
     qr_code_uuid: UUID
-    current_balance: Decimal
-    created_at: datetime
+    current_balance: float
+    date: datetime
 
     model_config = ConfigDict(from_attributes=True)
 
 class SessionBase(BaseModel):
-    plan_id: int 
+    children: int
+    adults: int
+    discount_percentage: Optional[float] = 0.0
+    discount_reason: Optional[str] = None
+    duration_hr: int
+    actual_cost : float
+    discounted_cost : float
 
 class SessionCreate(SessionBase):
     qr_code_uuid: UUID 
 
 class SessionResponse(SessionBase):
-    id: int
+    s_id: int
     customer_id: int
     start_time: datetime
     expected_end_time: datetime
     actual_end_time: Optional[datetime] = None
     status: str
-    cost_deducted: Decimal
     
     customer: Optional[CustomerResponse] = None 
 
@@ -53,16 +47,18 @@ class SessionResponse(SessionBase):
 
 
 class TransactionBase(BaseModel):
-    amount: Decimal
+    amount: float
     transaction_type: str
     payment_mode: Optional[str] = None
+    admin_id: Optional[int] = None
+    
 
 class TransactionCreate(TransactionBase):
     customer_id: int 
 
 class TransactionResponse(TransactionBase):
-    id: int
+    t_id: int
     customer_id: int
-    created_at: datetime
+    date: datetime
 
     model_config = ConfigDict(from_attributes=True)
