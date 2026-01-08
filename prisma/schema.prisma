@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Admin {
+  id            Int           @id @default(autoincrement())
+  username      String        @unique
+  passwordHash  String
+  role          String        @default("STAFF")
+  createdAt     DateTime      @default(now())
+  transactions  Transaction[]
+}
+
+model Customer {
+  id             Int           @id @default(autoincrement())
+  qrCodeUuid     String        @unique @default(uuid()) // UUID generation
+  name           String
+  birthdate      DateTime
+  mobileNumber   String        @unique
+  currentBalance Float         @default(0.0)
+  createdAt      DateTime      @default(now())
+  
+  sessions       Session[]
+  transactions   Transaction[]
+}
+
+model Session {
+  id                 Int       @id @default(autoincrement())
+  customerId         Int
+  children           Int       @default(1)
+  adults             Int       @default(1)
+  discountPercentage Float     @default(0.0)
+  discountReason     String?
+  
+  startTime          DateTime  @default(now())
+  durationHr         Int       @default(1)
+  expectedEndTime    DateTime
+  actualEndTime      DateTime? // Nullable until exit
+  
+  status             String    @default("ACTIVE") // "ACTIVE" or "COMPLETED"
+  actualCost         Float
+  discountedCost     Float
+  
+  customer           Customer  @relation(fields: [customerId], references: [id])
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  customerId      Int
+  adminId         Int?     // Optional because SESSION_DEDUCT might be automated
+  
+  transactionType String   // "RECHARGE" or "SESSION_DEDUCT"
+  amount          Float
+  paymentMode     String?  // "CASH", "UPI", or null for deductions
+  date            DateTime @default(now())
+  
+  customer        Customer @relation(fields: [customerId], references: [id])
+  admin           Admin?   @relation(fields: [adminId], references: [id])
+}
+
+model RechargeOffer {
+  id            Int      @id @default(autoincrement())
+  triggerAmount Float    @unique // The amount user pays (e.g., 1000)
+  bonusAmount   Float    // The extra added (e.g., 200)
+  description   String?  // e.g. "Diwali Dhamaka Offer"
+  isActive      Boolean  @default(true)
+}
