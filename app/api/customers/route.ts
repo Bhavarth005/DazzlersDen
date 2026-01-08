@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
+import { sendWelcomeMessage } from '@/lib/whatsapp'; 
+import { customerCreateSchema} from '@/lib/schemas';
 
 // GET: List all customers
 export async function GET(req: Request) {
@@ -19,7 +21,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const admin = await getCurrentAdmin(req);
-    const body = await req.json(); 
+    const rawBody = await req.json(); 
+    const body = customerCreateSchema.parse(rawBody);
     // Body: { name, mobile_number, birthdate, initial_balance }
     
     // 1. Check duplicate mobile
@@ -90,13 +93,24 @@ export async function POST(req: Request) {
 
       return newCustomer;
     });
+    await sendWelcomeMessage(
+        result.name, 
+        result.mobileNumber, 
+        result.qrCodeUuid, 
+        result.currentBalance
+    );
 
     return NextResponse.json({
         ...result,
-        message: bonus > 0 
-            ? `Customer created with balance ${initialAmount} + ${bonus} Bonus!` 
-            : "Customer created successfully"
+        message: "Customer created & WhatsApp sent!"
     });
+
+    // return NextResponse.json({
+    //     ...result,
+    //     message: bonus > 0 
+    //         ? `Customer created with balance ${initialAmount} + ${bonus} Bonus!` 
+    //         : "Customer created successfully"
+    // });
 
   } catch (e: any) {
     return NextResponse.json({ detail: e.message || "Server Error" }, { status: 500 });

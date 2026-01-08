@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
+import { sendSessionStartMessage } from '@/lib/whatsapp'; 
 
 export async function POST(req: Request) {
   try {
@@ -82,6 +83,16 @@ export async function POST(req: Request) {
 
       return newSession;
     });
+
+    const newBalance = customer.currentBalance - body.discounted_cost;
+    
+    await sendSessionStartMessage(
+        customer.name,
+        customer.mobileNumber,
+        body.discounted_cost,
+        newBalance,
+        `${body.adults} Adults, ${body.children} Kids`
+    );
 
     return NextResponse.json(session);
 

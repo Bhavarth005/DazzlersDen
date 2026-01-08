@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { verifyPassword, createToken } from '@/lib/auth';
 
 export async function POST(req: Request) {
+  await new Promise(resolve => setTimeout(resolve, 1000));
   try {
     const body = await req.json(); // Expects { username, password }
     

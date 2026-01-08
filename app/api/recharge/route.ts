@@ -1,11 +1,16 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
+import { sendRechargeMessage } from '@/lib/whatsapp'; 
+import { rechargeSchema } from '@/lib/schemas';
 
 export async function POST(req: Request) {
   try {
     const admin = await getCurrentAdmin(req);
-    const body = await req.json(); 
+    const rawBody = await req.json();
+
+    // VALIDATION STEP: This throws an error if inputs are bad (e.g. negative amount)
+    const body = rechargeSchema.parse(rawBody);
     // Body: { customer_id, amount, payment_mode }
 
     // 1. Validate Customer
@@ -18,7 +23,6 @@ export async function POST(req: Request) {
     }
 
     // 2. Check for Active Offers
-    // We look for an offer where the triggerAmount matches exactly what is being paid
     const offer = await prisma.rechargeOffer.findFirst({
       where: {
         triggerAmount: body.amount,
@@ -31,42 +35,52 @@ export async function POST(req: Request) {
 
     // 3. Perform Transaction (Atomic Update)
     const result = await prisma.$transaction(async (tx) => {
-      // A. Update Wallet Balance (Cash + Bonus)
-      await tx.customer.update({
+      // Update Balance
+      const updatedCustomer = await tx.customer.update({
         where: { id: body.customer_id },
         data: { currentBalance: { increment: totalWalletAdd } }
       });
 
-      // B. Create MAIN Transaction (Real Money)
+      // Create MAIN Transaction
       const mainTxn = await tx.transaction.create({
         data: {
           customerId: body.customer_id,
           adminId: admin.id,
-          transactionType: "RECHARGE", // Standard type
-          amount: body.amount,         // Only the real cash amount
+          transactionType: "RECHARGE",
+          amount: body.amount,
           paymentMode: body.payment_mode
         }
       });
 
-      // C. Create BONUS Transaction (If applicable)
+      // Create BONUS Transaction
       if (bonus > 0) {
         await tx.transaction.create({
           data: {
             customerId: body.customer_id,
             adminId: admin.id,
-            transactionType: "BONUS",  // Distinct type for filtering later
+            transactionType: "BONUS",
             amount: bonus,
-            paymentMode: "SYSTEM"      // Indicates system generated
+            paymentMode: "SYSTEM"
           }
         });
       }
 
-      return mainTxn;
+      // Return the updated customer so we have the exact new balance
+      return { mainTxn, updatedCustomer };
     });
+
+    // --- NEW: SEND WHATSAPP NOTIFICATION ---
+    await sendRechargeMessage(
+        customer.name,
+        customer.mobileNumber,
+        body.amount,
+        bonus,
+        result.updatedCustomer.currentBalance // The authoritative new balance from DB
+    );
 
     return NextResponse.json({
       success: true,
-      new_balance: customer.currentBalance + totalWalletAdd,
+      new_balance: result.updatedCustomer.currentBalance,
       message: bonus > 0 
         ? `Recharged ${body.amount} + ${bonus} Bonus Applied!` 
         : `Recharged ${body.amount} successfully.`
@@ -74,6 +88,9 @@ export async function POST(req: Request) {
 
   } catch (e: any) {
     if (e.message === "Unauthorized") return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
+    if (e.name === 'ZodError') {
+        return NextResponse.json({ detail: e.errors }, { status: 400 });
+    }
     return NextResponse.json({ detail: e.message }, { status: 500 });
   }
 }
