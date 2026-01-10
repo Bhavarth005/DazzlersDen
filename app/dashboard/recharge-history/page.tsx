@@ -1,64 +1,194 @@
 'use client'
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Transaction } from '../components/recharge/types';
-import { fetchTransactions } from '../components/recharge/api';
-import { useSelection } from '../components/customers/useSelection'; // The hook from previous chat
+import { useSelection } from '../components/customers/useSelection'; 
 import TransactionRow from '../components/recharge/transactionRow';
 import TransactionMobileCard from '../components/recharge/transactionMobileCard';
 import DashboardCard from '../components/dashboard/Card';
-import { IndianRupee, Timer, TrendingUp, TriangleAlert } from 'lucide-react';
+import { IndianRupee } from 'lucide-react';
+import { toast } from 'sonner';
+
+// --- HELPER: Date Range Calculator ---
+const getDateRange = (filter: string, customStart: string, customEnd: string) => {
+  const now = new Date();
+  let start = "";
+  let end = "";
+
+  if (filter === 'Today') {
+    start = now.toISOString().split('T')[0];
+    end = start;
+  } else if (filter === 'This Month') {
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    start = firstDay.toISOString().split('T')[0];
+    end = lastDay.toISOString().split('T')[0];
+  } else if (filter === 'Last Month') {
+    const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
+    start = firstDay.toISOString().split('T')[0];
+    end = lastDay.toISOString().split('T')[0];
+  } else if (filter === 'Custom') {
+    start = customStart;
+    end = customEnd;
+  }
+
+  return { start, end };
+};
 
 export default function RechargeHistory() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
+  // Stats State
+  const [stats, setStats] = useState({ cash: "0", upi: "0", total: "0" });
+
+  // Filter State
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(5); // Default 5 items per page
+  const [pageSize, setPageSize] = useState(10); 
   const [totalPages, setTotalPages] = useState(0);
-  const [totalItems, setTotalItems] = useState(0);
-
-  const [customDates, setCustomDates] = useState({ start: '', end: '' });
-
-  const [stats, setStats] = useState<string[]>(["0", "0", "0"]);
 
   const [dateFilter, setDateFilter] = useState('This Month');
+  const [customDates, setCustomDates] = useState({ start: '', end: '' });
+  
   const [isDateDropdownOpen, setIsDateDropdownOpen] = useState(false);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
 
   const selection = useSelection([]);
 
+  // --- API CALL ---
   const loadData = async () => {
       setIsLoading(true);
+      const token = localStorage.getItem('access_token');
+      if (!token) { router.push('/auth/login'); return; }
+
       try {
-        const resp = await fetchTransactions(currentPage, searchTerm, pageSize);
-        setTransactions(resp.data);
-        setTotalPages(resp.totalPages);
-        setTotalItems(resp.totalItems);
+        const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
+        const skip = (currentPage - 1) * pageSize;
+        const params = new URLSearchParams({
+            skip: skip.toString(),
+            limit: pageSize.toString(),
+            search: searchTerm,
+            start_date: start,
+            end_date: end
+        });
+
+        const res = await fetch(`/api/transactions?${params.toString()}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) { router.push('/auth/login'); return; }
+        if (!res.ok) throw new Error("Failed to fetch data");
+
+        const json = await res.json();
+
+        // Map Data
+        const mappedData = (json.data || []).map((t: any) => ({
+            id: t.id.toString(),
+            customerId: t.customerId,
+            customerName: t.customer?.name || "Unknown",
+            customerMobile: t.customer?.mobileNumber || "N/A",
+            amount: t.amount,
+            type: t.transactionType,
+            date: new Date(t.date).toLocaleDateString(),
+            time: new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            paymentMode: t.paymentMode || "-"
+        }));
+
+        setTransactions(mappedData);
+        setTotalPages(Math.ceil((json.pagination?.total || 0) / pageSize));
+
+        // Update Stats
+        setStats({
+            cash: (json.stats?.CASH || 0).toLocaleString('en-IN'),
+            upi: (json.stats?.UPI || 0).toLocaleString('en-IN'),
+            total: (json.stats?.TOTAL || 0).toLocaleString('en-IN')
+        });
+
       } catch (error) {
         console.error("Failed to fetch", error);
+        toast.error("Could not load transactions");
       } finally {
         setIsLoading(false);
       }
     };
 
   useEffect(() => {
-    // Debounce search to prevent API spam
     const timer = setTimeout(() => loadData(), 500);
     return () => clearTimeout(timer);
-  }, [currentPage, searchTerm, pageSize]);
+  }, [currentPage, searchTerm, pageSize, dateFilter, customDates]);
+
+  // --- EXPORT HANDLER ---
+  const handleExport = (format: 'pdf' | 'csv') => {
+      const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
+      const params = new URLSearchParams({
+          format,
+          search: searchTerm,
+          start_date: start,
+          end_date: end
+      });
+      window.open(`/api/export/transactions?${params.toString()}`, '_blank');
+  };
+
+  // --- BULK DELETE IMPLEMENTATION ---
+  const handleBulkDelete = async () => {
+    // 1. Confirm Intent
+    const count = selection.selectedIds.length;
+    if(!confirm(`Are you sure you want to delete ${count} transaction(s)? This will affect your Income Stats.`)) return;
+    
+    setIsLoading(true);
+    const token = localStorage.getItem('access_token');
+
+    try {
+      // 2. Map selected IDs to Fetch Promises
+      const deletePromises = selection.selectedIds.map(id => 
+          fetch(`/api/transactions/${id}`, {
+              method: 'DELETE',
+              headers: { 'Authorization': `Bearer ${token}` }
+          })
+      );
+
+      // 3. Execute all requests in parallel
+      const results = await Promise.all(deletePromises);
+
+      // 4. Check for failures
+      const failed = results.filter(r => !r.ok);
+
+      if (failed.length > 0) {
+          // If all failed
+          if (failed.length === results.length) {
+              throw new Error("Failed to delete records. Check server logs.");
+          }
+          // If some failed
+          toast.warning(`Completed with errors. ${failed.length} records could not be deleted.`);
+      } else {
+          toast.success(`${count} records deleted successfully.`);
+      }
+
+      // 5. Cleanup
+      selection.setSelectedIds([]); // Clear checkboxes
+      await loadData(); // Reload data to update Table AND Stats (Cash/UPI totals)
+
+    } catch (error: any) {
+      console.error("Bulk delete failed", error);
+      toast.error(error.message || "Failed to delete transactions");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
 
+  // --- SELECTION LOGIC ---
   const isPageSelected = transactions.length > 0 && transactions.every(t => selection.selectedIds.includes(t.id));
 
   const togglePageSelection = () => {
     const pageIds = transactions.map(t => t.id);
     if (isPageSelected) {
-      // Uncheck: Remove ONLY the visible IDs, keep others selected
       selection.setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
     } else {
-      // Check: Add visible IDs to existing selection (Set prevents duplicates)
       selection.setSelectedIds(prev => Array.from(new Set([...prev, ...pageIds])));
     }
   };
@@ -73,18 +203,13 @@ export default function RechargeHistory() {
     setIsExportDropdownOpen(false);
   };
 
-  const handleBulkDelete = () => {
-    console.log("Deleting IDs:", selection.selectedIds);
-    selection.setSelectedIds([]);
-  };
-
   const getPageNumbers = () => {
     if (totalPages <= 1) return [];
     let start = Math.max(1, currentPage - 1);
     let end = Math.min(totalPages, start + 2);
     if (end === totalPages) start = Math.max(1, end - 2);
     const pages = [];
-    for (let i = start; i <= end; i++) pages.push(i);
+    for (let i = start; i <= end; i++) { if(i>0) pages.push(i); }
     return pages;
   };
 
@@ -96,9 +221,11 @@ export default function RechargeHistory() {
 
       <div className="max-w-350 mx-auto flex flex-col gap-6">
 
-        {/* --- HEADER --- */}
+        {/* --- HEADER (CONDITIONAL RENDERING RESTORED) --- */}
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+          
           {selection.selectedIds.length > 0 ? (
+            // --- SELECTION HEADER ---
             <div className="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 flex items-center justify-between animate-in fade-in">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-3">
@@ -108,11 +235,14 @@ export default function RechargeHistory() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => selection.setSelectedIds([])} className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white/50 rounded-md">Cancel</button>
-                    <button onClick={handleBulkDelete} className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md">Delete</button>
+                    <button onClick={() => selection.setSelectedIds([])} className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white/50 rounded-md transition-colors">Cancel</button>
+                    <button onClick={handleBulkDelete} className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
+                        <span className="material-symbols-outlined text-[18px]">delete</span> Delete
+                    </button>
                 </div>
             </div>
           ) : (
+            // --- STANDARD HEADER ---
             <>
               <h2 className="text-2xl font-bold text-[#0d141c] dark:text-white">Recharge History</h2>
               
@@ -161,10 +291,7 @@ export default function RechargeHistory() {
                       <input 
                         type="date" 
                         value={customDates.end} 
-                        onChange={ (e) => {
-                          setCustomDates({...customDates, end: e.target.value})
-                          loadData();
-                        } } 
+                        onChange={ (e) => setCustomDates({...customDates, end: e.target.value}) } 
                         className="px-3 py-2.5 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg text-sm text-[#0d141c] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"
                       />
                   </div>
@@ -182,10 +309,10 @@ export default function RechargeHistory() {
                     </button>
                     {isExportDropdownOpen && (
                       <div className="absolute top-full mt-1 right-0 w-full sm:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100 z-50">
-                        <button className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <button onClick={() => handleExport('pdf')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                           <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
                         </button>
-                        <button className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                        <button onClick={() => handleExport('csv')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                           <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
                         </button>
                       </div>
@@ -196,22 +323,24 @@ export default function RechargeHistory() {
           )}
         </div>
 
+        {/* --- STATS CARDS --- */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <DashboardCard 
-                  title="Cash Income" 
-                  mainText={stats[0]}
-                  cardIcon={IndianRupee}  />
-        
-                <DashboardCard 
-                  title="UPI Income" 
-                  mainText={stats[1]}
-                  cardIcon={IndianRupee}  />
-        
-                <DashboardCard 
-                  title="Total Income" 
-                  mainText={stats[2]}
-                  cardIcon={IndianRupee}  />
-              </div>
+            <DashboardCard 
+              title="Cash Income" 
+              mainText={`₹ ${stats.cash}`}
+              cardIcon={IndianRupee}  
+            />
+            <DashboardCard 
+              title="UPI Income" 
+              mainText={`₹ ${stats.upi}`}
+              cardIcon={IndianRupee}  
+            />
+            <DashboardCard 
+              title="Total Income" 
+              mainText={`₹ ${stats.total}`}
+              cardIcon={IndianRupee}  
+            />
+        </div>
 
         {/* --- DESKTOP TABLE --- */}
         <div className="hidden md:block bg-white dark:bg-[#1e2836] rounded-xl shadow-sm border border-[#e7edf4] dark:border-slate-700 overflow-hidden flex-col">
@@ -227,7 +356,7 @@ export default function RechargeHistory() {
                         className="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer"
                      />
                   </th>
-                  {/* ... Headers ... */}
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Txn. ID</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Date & Time</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Customer</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Phone</th>
@@ -239,16 +368,17 @@ export default function RechargeHistory() {
               <tbody className="divide-y divide-[#e7edf4] dark:divide-slate-700 text-sm">
                 {isLoading ? (
                     <tr><td colSpan={7} className="p-8 text-center text-slate-500">Loading...</td></tr>
-                ) : transactions.map((txn) => (
-                  <TransactionRow 
-                    key={txn.id} 
-                    txn={txn} 
-                    isSelected={selection.selectedIds.includes(txn.id)}
-                    onToggle={() => selection.toggleSelection(txn.id)}
-                  />
-                ))}
-                {!isLoading && transactions.length === 0 && (
+                ) : transactions.length === 0 ? (
                   <tr><td colSpan={7} className="p-8 text-center text-slate-500">No records found.</td></tr>
+                ) : (
+                    transactions.map((txn) => (
+                    <TransactionRow 
+                        key={txn.id} 
+                        txn={txn} 
+                        isSelected={selection.selectedIds.includes(txn.id)}
+                        onToggle={() => selection.toggleSelection(txn.id)}
+                    />
+                    ))
                 )}
               </tbody>
             </table>
@@ -267,9 +397,8 @@ export default function RechargeHistory() {
           ))}
         </div>
 
-        {/* --- FOOTER with Page Size Selector --- */}
+        {/* --- PAGINATION FOOTER --- */}
         <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 py-2">
-           
            <div className="flex items-center gap-4 text-sm text-slate-500">
               <div className="flex items-center gap-2">
                  <span>Rows per page:</span>

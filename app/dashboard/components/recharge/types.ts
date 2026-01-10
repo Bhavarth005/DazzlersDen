@@ -1,5 +1,5 @@
 // types.ts
-export type TransactionType = 'Recharge' | 'Deduction';
+export type TransactionType = 'RECHARGE' | 'SESSION_DEDUCT' | 'BONUS';
 
 export type Transaction = {
   id: string;
@@ -7,8 +7,9 @@ export type Transaction = {
   date: string;
   time: string;
   customerName: string;
-  phoneNo: string;
+  customerMobile: string;
   type: TransactionType;
+  paymentMode: "CASH" | "UPI";
   amount: string;
 };
 

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function TransactionMobileCard({ txn, isSelected, onToggle }: Props) {
-  const isRecharge = txn.type === 'Recharge';
+  const isRecharge = txn.type === 'RECHARGE' || txn.type === "BONUS";
 
   return (
     <div 
@@ -39,7 +39,7 @@ export default function TransactionMobileCard({ txn, isSelected, onToggle }: Pro
         <div className="flex flex-col w-full gap-2">
            <div className="flex justify-between">
               <span className="font-medium text-[#0d141c] dark:text-white">{txn.customerName}</span>
-              <span className="font-medium text-[#0d141c] dark:text-white">{txn.phoneNo}</span>
+              <span className="font-medium text-[#0d141c] dark:text-white">{txn.customerMobile}</span>
            </div>
            <span className="text-xs text-slate-400">ID: {txn.customerId}</span>
         </div>
@@ -54,7 +54,7 @@ export default function TransactionMobileCard({ txn, isSelected, onToggle }: Pro
             {txn.type}
          </span>
          <span className={`text-lg font-bold ${isRecharge ? 'text-green-600 dark:text-green-400' : 'text-[#0d141c] dark:text-white'}`}>
-            {txn.amount}
+            ₹{txn.amount}
          </span>
       </div>
     </div>

@@ -7,7 +7,7 @@ interface Props {
 }
 
 export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
-  const isRecharge = txn.type === 'Recharge';
+  const isRecharge = txn.type === 'RECHARGE' || txn.type === 'BONUS';
 
   return (
     <tr 
@@ -24,6 +24,9 @@ export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer align-middle"
         />
       </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+        {txn.id}
+      </td>
       <td className="px-6 py-4 whitespace-nowrap text-slate-500 dark:text-slate-400">
         {txn.date} <br />
         <span className="text-xs text-slate-400">{txn.time}</span>
@@ -35,7 +38,7 @@ export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
         </div>
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
-        {txn.phoneNo}
+        {txn.customerMobile}
       </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border
@@ -48,7 +51,7 @@ export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
         </span>
       </td>
       <td className={`px-6 py-4 whitespace-nowrap text-right font-semibold ${isRecharge ? 'text-green-600 dark:text-green-400' : 'text-[#0d141c] dark:text-white'}`}>
-        {txn.amount}
+        ₹ {txn.amount}
       </td>
       <td className="px-6 py-4 whitespace-nowrap text-right">
         <button className="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
