@@ -37,7 +37,7 @@ const getDateRange = (filter: string, customStart: string, customEnd: string) =>
   return { start, end };
 };
 
-export default function RechargeHistory() {
+export default function Transactions() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -291,7 +291,7 @@ export default function RechargeHistory() {
           ) : (
             // --- STANDARD HEADER ---
             <>
-              <h2 className="text-2xl font-bold text-[#0d141c] dark:text-white">Recharge History</h2>
+              <h2 className="text-2xl font-bold text-[#0d141c] dark:text-white">Transactions</h2>
               
               <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
                 {/* Search */}

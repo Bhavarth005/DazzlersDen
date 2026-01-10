@@ -33,7 +33,7 @@ export const sidebarLinks = [
   },
   {
     title: "Transactions",
-    href: "/dashboard/recharge-history",
+    href: "/dashboard/transactions",
     icon: ReceiptIndianRupee,
   },
   {
