@@ -24,27 +24,29 @@ export async function sendWelcomeMessage(name: string, mobile: string, qrUuid: s
     }
 }
 
-export async function sendSessionStartMessage(name: string, mobile: string, cost: number, balance: number, guests: string) {
+export async function sendSessionStartMessage(name: string, mobile: string, cost: number, guests: string) {
     try {
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            body: `*Session Started!* 🎢\n\nHi ${name}, enjoy your time at Dazzler's Den!\n\n👥 *Guests:* ${guests}\n💸 *Deducted:* Rs. ${cost}\n💰 *Remaining Balance:* Rs. ${balance}`
+            // Removed "Remaining Balance" line below
+            body: `*Session Started!* 🎢\n\nHi ${name}, enjoy your time at Dazzler's Den!\n\n👥 *Guests:* ${guests}\n *Balance Deducted:* Rs. ${cost}`
         });
     } catch (error) {
         console.error("Failed to send Start WhatsApp:", error);
     }
 }
 
-export async function sendSessionEndMessage(name: string, mobile: string, duration: number) {
+export async function sendSessionExitMessage(name: string, mobile: string, endTime: string, balance: number) {
     try {
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            body: `*Session Completed* ✅\n\nHope you had a great time, ${name}!\nYour session of ${duration} hours has ended.\n\nSee you next time! 👋`
+            body: `*Session Ended!*\n\nHello ${name},\nYour session ended at: ${endTime}\n💰 *Final Balance:* Rs. ${balance}\n\nThanks for visiting Dazzler's Den! 👋`
         });
+        console.log(`Exit WhatsApp sent to ${name}`);
     } catch (error) {
-        console.error("Failed to send End WhatsApp:", error);
+        console.error("Failed to send Exit WhatsApp:", error);
     }
 }
 
