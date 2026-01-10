@@ -15,35 +15,49 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      // Point to your Python server port (5000)
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        // Ensure httponly cookie set by the server is included
+        credentials: 'include',
         body: JSON.stringify(formData),
-        credentials: 'include', 
       });
 
       if (response.ok) {
-        // Success! The cookie is now stored in your browser.
-        router.refresh(); 
+        const data = await response.json();
+        // Persist token for client-side usage (server also sets httponly cookie)
+        if (data.access_token) {
+          try {
+            localStorage.setItem('access_token', data.access_token);
+          } catch (err) {
+            console.warn('Unable to write to localStorage', err);
+          }
+        }
+
+        toast.success('Signed in');
+        router.refresh();
         router.push('/dashboard');
-        setIsLoading(true);
       } else {
-        toast.error("Invalid Credentials")
+        // Try to parse error message
+        let errMsg = 'Invalid Credentials';
+        try {
+          const errJson = await response.json();
+          if (errJson?.detail) errMsg = errJson.detail;
+        } catch (_) {}
+        toast.error(errMsg);
         setIsLoading(false);
       }
     } catch (error) {
-      console.error("Login failed", error);
-      alert("Server error. Is Python running?");
+      console.error('Login failed', error);
+      toast.error('Server error. Please try again.');
       setIsLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen w-full flex flex-col gap-24 items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-      
       <div className="flex items-center gap-8">
         <img 
           className='h-28 mix-blend-multiply'
@@ -76,9 +90,7 @@ export default function LoginPage() {
           
           {/* Username Field */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Username
-            </label>
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Username</label>
             <div className="relative">
               <span className="absolute flex items-center left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">person</span>
@@ -87,7 +99,7 @@ export default function LoginPage() {
                 type="text"
                 required
                 value={formData.username}
-                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                 placeholder="Enter your username"
                 className="w-full pl-12 pr-4 h-11 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
               />
@@ -96,9 +108,7 @@ export default function LoginPage() {
 
           {/* Password Field */}
           <div className="flex flex-col gap-2">
-            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-              Password
-            </label>
+            <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Password</label>
             <div className="relative">
               <span className="absolute flex items-center left-4 top-1/2 -translate-y-1/2 text-slate-400">
                 <span className="material-symbols-outlined text-[20px]">key</span>
@@ -107,7 +117,7 @@ export default function LoginPage() {
                 type={showPassword ? "text" : "password"}
                 required
                 value={formData.password}
-                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
                 className="w-full pl-12 pr-11 h-11 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-400"
               />
@@ -135,9 +145,7 @@ export default function LoginPage() {
               "Sign In"
             )}
           </button>
-
         </form>
-
       </div>
     </div>
   );
