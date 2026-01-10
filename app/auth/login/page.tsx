@@ -58,7 +58,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex flex-col gap-24 items-center justify-center bg-slate-50 dark:bg-slate-900 p-4">
-      <div className="flex items-center gap-8">
+      <div className="flex flex-col items-center gap-8 lg:flex-row">
         <img 
           className='h-28 mix-blend-multiply'
           src="/logo.png" 
