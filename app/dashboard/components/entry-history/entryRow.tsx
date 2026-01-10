@@ -1,42 +1,20 @@
 import { Entry } from './types';
 
-interface Props {
-  entry: Entry;
-  isSelected: boolean;
-  onToggle: () => void;
-}
-
-export default function EntryRow({ entry, isSelected, onToggle }: Props) {
+export default function EntryRow({ entry, onView }: { entry: Entry, onView: () => void }) {
   const statusStyles = {
-    'Completed': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
-    'In Progress': 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300',
-    'Overdue': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+    'COMPLETED': 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+    'IN PROGRESS': 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-300',
+    'OVERDUE': 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
   };
 
   const statusDot = {
-    'Completed': 'bg-green-500',
-    'In Progress': 'bg-primary animate-pulse',
-    'Overdue': 'bg-red-500'
+    'COMPLETED': 'bg-green-500',
+    'IN PROGRESS': 'bg-primary animate-pulse',
+    'OVERDUE': 'bg-red-500'
   };
 
   return (
-    <tr 
-        onClick={onToggle}
-        className={`group transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-700/50 
-          ${isSelected 
-            ? 'bg-blue-50 dark:bg-blue-900/10' 
-            : 'hover:bg-slate-50 dark:hover:bg-slate-700/30'
-          }`}
-    >
-      <td className="px-6 py-4">
-        <input 
-            type="checkbox" 
-            checked={isSelected}
-            onChange={() => {}} 
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer align-middle"
-        />
-      </td>
+    <tr className="group transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-700/50 hover:bg-slate-50 dark:hover:bg-slate-700/30">
       <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-slate-600 dark:text-slate-300">{entry.id}</td>
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="text-sm font-medium text-slate-900 dark:text-white">{entry.customerName}</div>
@@ -55,10 +33,14 @@ export default function EntryRow({ entry, isSelected, onToggle }: Props) {
           {entry.status}
         </span>
       </td>
+
       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
         <button 
-            onClick={(e) => e.stopPropagation()} 
-            className="text-slate-400 hover:text-primary transition-colors"
+            onClick={(e) => {
+                e.stopPropagation();
+                onView(); // Trigger the modal
+            }} 
+            className="text-slate-400 hover:text-primary transition-colors p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full"
         >
           <span className="material-symbols-outlined">more_vert</span>
         </button>
