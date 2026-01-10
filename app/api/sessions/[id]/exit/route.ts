@@ -1,102 +1,83 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
-import { sendSessionStartMessage } from '@/lib/whatsapp';
-import { sessionStartSchema } from '@/lib/schemas'; 
+import { sendSessionExitMessage } from '@/lib/whatsapp';
 
-export async function POST(req: Request) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await getCurrentAdmin(req);
-    const rawBody = await req.json();
+    const { id } = await params;
+    const sessionId = parseInt(id);
 
-    // 2. SECURITY: Validate Input
-    const body = sessionStartSchema.parse(rawBody);
-
-    // 3. Find Customer by QR UUID
-    const customer = await prisma.customer.findUnique({
-      where: { qrCodeUuid: body.qr_code_uuid }
-    });
-
-    if (!customer) {
-      return NextResponse.json({ detail: "Invalid QR Code" }, { status: 404 });
-    }
-
-    // 4. Check for existing active session
-    const activeSession = await prisma.session.findFirst({
-      where: {
-        customerId: customer.id,
-        status: "ACTIVE"
-      }
-    });
-
-    if (activeSession) {
-      return NextResponse.json({ detail: "Customer already has an active session" }, { status: 400 });
-    }
-
-    // 5. Calculate Timings
-    const startTime = new Date();
-    const expectedEndTime = new Date(startTime.getTime() + body.duration_hr * 60 * 60 * 1000);
-
-    // 6. Create Session (Atomic Transaction)
+    // 1. DATABASE TRANSACTION (Matches your Start Script style)
+    // We use a transaction here to ensure we "Check Status" and "Update Status" atomically.
     const result = await prisma.$transaction(async (tx) => {
-      // Deduct Balance
-      await tx.customer.update({
-        where: { id: customer.id },
-        data: { currentBalance: { decrement: body.discounted_cost } }
+
+      // Step A: Find the Session (and lock it conceptually)
+      const session = await tx.session.findUnique({
+        where: { id: sessionId },
+        include: { customer: true }
       });
 
-      // Create Session Record
-      const newSession = await tx.session.create({
+      if (!session) {
+        throw new Error("Session not found");
+      }
+
+      // Step B: Logic Validation inside Transaction
+      if (session.status !== "ACTIVE") {
+        throw new Error("Session is already closed");
+      }
+
+      // Step C: Calculate End Time
+      const endTime = new Date();
+
+      // (Optional: In the future, you can add "Overstay Penalty" calculation logic here
+      // and create a 'transaction' record just like the Start script does.)
+
+      // Step D: Update Session Status
+      const updatedSession = await tx.session.update({
+        where: { id: sessionId },
         data: {
-          customerId: customer.id,
-          children: body.children,
-          adults: body.adults,
-          durationHr: body.duration_hr,
-          actualCost: body.actual_cost,
-          discountedCost: body.discounted_cost,
-          discountPercentage: body.discount_percentage,
-          discountReason: body.discount_reason,
-          startTime: startTime,
-          expectedEndTime: expectedEndTime,
-          status: "ACTIVE"
+          actualEndTime: endTime,
+          status: "COMPLETED"
         }
       });
 
-      // Create Transaction Record (Cost Deduction)
-      await tx.transaction.create({
-        data: {
-          customerId: customer.id,
-          adminId: admin.id,
-          transactionType: "SESSION_DEDUCT",
-          amount: body.discounted_cost,
-          paymentMode: "WALLET"
-        }
-      });
-
-      return newSession;
+      // Return both session and customer data for the next step
+      return { updatedSession, customer: session.customer };
     });
 
-    // 7. Send WhatsApp (Non-blocking)
-    const newBalance = customer.currentBalance - body.discounted_cost;
-    await sendSessionStartMessage(
-        customer.name, 
-        customer.mobileNumber, 
-        body.discounted_cost, 
-        newBalance, 
-        `${body.adults} Adults, ${body.children} Kids`
-    );
+    // 2. Send WhatsApp (Non-blocking / Outside Transaction)
+    try {
+      await sendSessionExitMessage(
+        result.customer.name,
+        result.customer.mobileNumber,
+        result.updatedSession.actualEndTime?.toLocaleTimeString() || "Now", // endTime
+        result.customer.currentBalance // balance
+      );
+    } catch (whatsappError) {
+      console.error("WhatsApp failed, but session exited successfully:", whatsappError);
+    }
 
-    return NextResponse.json(result);
+    return NextResponse.json(result.updatedSession);
 
   } catch (e: any) {
-    // 8. Handle Validation Errors specifically
-    if (e.name === 'ZodError') {
-        return NextResponse.json({ detail: e.errors }, { status: 400 });
+
+    // 3. Error Handling
+    if (e.message === "Unauthorized") {
+      return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
     }
-    
-    if (e.message === "Unauthorized") return NextResponse.json({ detail: "Unauthorized" }, { status: 401 });
-    
+
+    // Handle the custom errors thrown inside the transaction
+    if (e.message === "Session not found") {
+      return NextResponse.json({ detail: "Session not found" }, { status: 404 });
+    }
+
+    if (e.message === "Session is already closed") {
+      return NextResponse.json({ detail: "Session is already closed" }, { status: 400 });
+    }
+
     console.error(e); // Log internal errors
-    return NextResponse.json({ detail: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ detail: e.message || "Internal Server Error" }, { status: 500 });
   }
 }
