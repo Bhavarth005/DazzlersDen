@@ -121,16 +121,63 @@ export default function RechargeHistory() {
     return () => clearTimeout(timer);
   }, [currentPage, searchTerm, pageSize, dateFilter, customDates]);
 
-  // --- EXPORT HANDLER ---
-  const handleExport = (format: 'pdf' | 'csv') => {
-      const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
-      const params = new URLSearchParams({
+  
+  const handleExport = async (format: 'pdf' | 'csv') => {
+    try {
+        const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
+        const params = new URLSearchParams({
           format,
           search: searchTerm,
           start_date: start,
           end_date: end
-      });
-      window.open(`/api/export/transactions?${params.toString()}`, '_blank');
+        });
+        const token = localStorage.getItem("access_token");
+        const url = `/api/export/transactions?${params.toString()}`;
+
+        // 1. Fetch the data with the Header
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Header is now possible
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) throw new Error("Export failed");
+
+        // 2. Get the filename from headers (Optional, but recommended)
+        // Look for: Content-Disposition: attachment; filename="transactions.csv"
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = 'transactions.csv';
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) { 
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+
+        // 3. Convert response to a Blob
+        const blob = await response.blob();
+
+        // 4. Create a temporary URL for the Blob
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // 5. Create an invisible link and click it
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename; // Set the filename
+        document.body.appendChild(link);
+        link.click();
+
+        // 6. Cleanup
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+
+    } catch (error) {
+        console.error("Download failed", error);
+        alert("Failed to download export.");
+    }
   };
 
   // --- BULK DELETE IMPLEMENTATION ---

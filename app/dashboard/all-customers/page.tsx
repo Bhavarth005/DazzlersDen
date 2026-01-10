@@ -180,6 +180,60 @@ export default function CustomerManagement() {
     }
   };
 
+  const handleExport = async (format: 'pdf' | 'csv') => {
+    try {
+        const params = new URLSearchParams({
+          format,
+        });
+        const token = localStorage.getItem("access_token");
+        const url = `/api/export/customers?${params.toString()}`;
+
+        // 1. Fetch the data with the Header
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`, // Header is now possible
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) throw new Error("Export failed");
+
+        // 2. Get the filename from headers (Optional, but recommended)
+        // Look for: Content-Disposition: attachment; filename="transactions.csv"
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = 'customers.csv';
+        if (disposition && disposition.indexOf('attachment') !== -1) {
+            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+            const matches = filenameRegex.exec(disposition);
+            if (matches != null && matches[1]) { 
+                filename = matches[1].replace(/['"]/g, '');
+            }
+        }
+
+        // 3. Convert response to a Blob
+        const blob = await response.blob();
+
+        // 4. Create a temporary URL for the Blob
+        const downloadUrl = window.URL.createObjectURL(blob);
+
+        // 5. Create an invisible link and click it
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = filename; // Set the filename
+        document.body.appendChild(link);
+        link.click();
+
+        // 6. Cleanup
+        link.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+
+    } catch (error) {
+        console.error("Download failed", error);
+        alert("Failed to download export.");
+    }
+  };
+
   const handleSaveCustomer = async (updatedCustomer: Customer) => {
     const token = localStorage.getItem('access_token');
 
@@ -281,10 +335,10 @@ export default function CustomerManagement() {
                     </button>
                     {isExportDropdownOpen && (
                       <div className="absolute top-full mt-1 right-0 w-full sm:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg flex flex-col z-50">
-                        <button onClick={() => window.open('/api/export/customers?format=pdf', '_blank')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <button onClick={() => handleExport("pdf")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
                           <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
                         </button>
-                        <button className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                        <button onClick={() => handleExport("csv")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
                           <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
                         </button>
                       </div>
