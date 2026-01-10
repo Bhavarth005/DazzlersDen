@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation'; // For redirection if unauthorized
 import { toast } from 'sonner';
 
 export default function NewCustomer() {
+  const router = useRouter();
+  
   // 1. State for form data and loading status
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,41 +24,71 @@ export default function NewCustomer() {
 
   // 3. Main Function to Handle API Call
   const registerCustomer = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent page reload
+    e.preventDefault(); 
     
     // Basic validation check
     if (!formData.fullName || !formData.mobileNumber) {
-      alert("Please fill in required fields");
+      toast.warning("Please fill in required fields");
       return;
     }
 
     setIsLoading(true);
 
     try {
-      console.log("Preparing to send data:", formData);
+      const token = localStorage.getItem('access_token');
 
-      // Example API call:
-      // const response = await fetch('/api/customers/create', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     name: formData.fullName,
-      //     mobile: formData.mobileNumber,
-      //     dob: formData.birthDate,
-      //     balance: Number(formData.initialBalance)
-      //   })
-      // });
+      // --- DATA MAPPING ---
+      // We must match the Zod Schema in src/lib/schemas.ts
+      const payload: any = {
+        name: formData.fullName,
+        mobile_number: formData.mobileNumber,
+        initial_balance: formData.initialBalance ? Number(formData.initialBalance) : 0,
+      };
 
-      // Simulate network delay for UI testing
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Only add birthdate if user selected one (prevents sending empty string which crashes Zod)
+      if (formData.birthDate) {
+        // Convert YYYY-MM-DD to ISO String for strict validation
+        payload.birthdate = new Date(formData.birthDate).toISOString();
+      }
+
+      // --- API CALL ---
+      const response = await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      // --- ERROR HANDLING ---
+      if (response.status === 401) {
+        toast.error("Unauthorized. Please login.");
+        router.push('/auth/login');
+        return;
+      }
+
+      if (!response.ok) {
+        // If backend sends Zod errors (array), show the first one
+        if (Array.isArray(data.detail)) {
+            throw new Error(data.detail[0].message || "Validation failed");
+        }
+        // If backend sends generic error string
+        throw new Error(data.detail || "Failed to create customer");
+      }
       
-      console.log("API Call Successful");
-      toast.success("New user created!")
-      // Reset form or redirect user here
+      // --- SUCCESS ---
+      console.log("Customer Created:", data);
+      toast.success(`Customer "${data.name}" added successfully!`);
+      
+      // Reset form
       setFormData({ fullName: '', mobileNumber: '', birthDate: '', initialBalance: '' });
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Failed to register customer:", error);
-      toast.error("Failed to create new user")
+      toast.error(error.message || "Failed to create new user");
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +128,7 @@ export default function NewCustomer() {
                 onChange={handleInputChange}
                 disabled={isLoading}
                 className="h-12 px-4 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none disabled:opacity-50"
-                placeholder="e.g. +91 12345 12345" 
+                placeholder="e.g. 9876543210" 
                 type="tel" 
                 required
               />
@@ -129,6 +162,7 @@ export default function NewCustomer() {
                   className="w-full h-12 pl-10 pr-4 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none disabled:opacity-50"
                   placeholder="0" 
                   type="number" 
+                  min="0"
                 />
               </div>
             </div>
