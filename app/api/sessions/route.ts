@@ -6,33 +6,48 @@ export async function GET(req: Request) {
   try {
     await getCurrentAdmin(req);
 
-    // 1. Parse Query Parameters
     const { searchParams } = new URL(req.url);
     const skip = parseInt(searchParams.get('skip') || '0');
     const limit = parseInt(searchParams.get('limit') || '10');
+    const search = searchParams.get('search');
+    const startDate = searchParams.get('start_date');
+    const endDate = searchParams.get('end_date');
 
-    // 2. Fetch Sessions with Pagination
+    const whereClause: any = {};
+
+    // Date Filter
+    if (startDate || endDate) {
+      whereClause.startTime = {};
+      if (startDate) whereClause.startTime.gte = new Date(startDate);
+      if (endDate) whereClause.startTime.lte = new Date(endDate);
+    }
+
+    // Search Filter
+    if (search) {
+      const isNumber = !isNaN(Number(search));
+      whereClause.OR = [
+        { customer: { name: { contains: search } } }
+      ];
+      if (isNumber) {
+        whereClause.OR.push({ id: parseInt(search) }); // Session ID
+      }
+    }
+
     const sessions = await prisma.session.findMany({
+      where: whereClause,
       skip: skip,
       take: limit,
       orderBy: { startTime: 'desc' },
       include: {
-        customer: {
-          select: { name: true, mobileNumber: true }
-        }
+        customer: { select: { name: true, mobileNumber: true } }
       }
     });
 
-    // 3. Get Total Count
-    const totalCount = await prisma.session.count();
+    const totalCount = await prisma.session.count({ where: whereClause });
 
     return NextResponse.json({
       data: sessions,
-      pagination: {
-        total: totalCount,
-        skip: skip,
-        limit: limit
-      }
+      pagination: { total: totalCount, skip, limit }
     });
 
   } catch (e: any) {

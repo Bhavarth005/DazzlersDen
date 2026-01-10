@@ -8,9 +8,31 @@ import { customerCreateSchema} from '@/lib/schemas';
 export async function GET(req: Request) {
   try {
     await getCurrentAdmin(req); 
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get('search') || "";
+
+    const whereClause: any = {};
+
+    if (search) {
+      // Check if search term is a number (for ID search)
+      const isNumber = !isNaN(Number(search));
+      
+      whereClause.OR = [
+        { name: { contains: search } }, // Search by Name (partial match)
+        { mobileNumber: { contains: search } }, // Search by Mobile
+      ];
+
+      if (isNumber) {
+        whereClause.OR.push({ id: parseInt(search) }); // Search by ID
+      }
+    }
+
     const customers = await prisma.customer.findMany({
-      orderBy: { createdAt: 'desc' }
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      take: 50 // Optional: Limit results to prevent crashing on empty search
     });
+    
     return NextResponse.json(customers);
   } catch (e) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
