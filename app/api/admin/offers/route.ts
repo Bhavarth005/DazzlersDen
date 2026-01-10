@@ -66,3 +66,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ detail: e.message }, { status: 500 });
   }
 }
+
+// DELETE: Remove an offer (SUPERADMIN ONLY)
+export async function DELETE(req: Request) {
+  try {
+    const admin = await getCurrentAdmin(req);
+
+    // 1. ROLE CHECK
+    if (admin.role !== 'SUPERADMIN') {
+        return NextResponse.json({ detail: "Forbidden: Superadmin access required" }, { status: 403 });
+    }
+
+    // 2. Get ID from URL Query Params
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+        return NextResponse.json({ detail: "Offer ID is required" }, { status: 400 });
+    }
+
+    // 3. Perform Delete
+    await prisma.rechargeOffer.delete({
+        where: { id: Number(id) }
+    });
+
+    return NextResponse.json({ success: true, message: "Offer deleted successfully" });
+
+  } catch (e: any) {
+    // Handle case where record doesn't exist
+    if (e.code === 'P2025') {
+        return NextResponse.json({ detail: "Offer not found" }, { status: 404 });
+    }
+    return NextResponse.json({ detail: e.message }, { status: 500 });
+  }
+}
