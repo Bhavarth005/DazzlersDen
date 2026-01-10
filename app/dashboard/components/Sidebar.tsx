@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import SidebarLink from "./SidebarLink"
-import { CircleX } from "lucide-react"
+import { CircleX, UserCog } from "lucide-react"
 import { sidebarLinks } from "./sidebarLinksConfig";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -87,9 +87,15 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
                 })}
             </nav>
             
-            <div className="p-4 border-t border-slate-800">
+            <div className="flex flex-col gap-2 p-4 border-t border-slate-800">
+                <SidebarLink
+                    title='User Management'
+                    icon={UserCog}
+                    href={'/dashboard/user-management'}
+                    active={pathname.endsWith("/dashboard/user-management")}
+                />
                 <button
-                    className="flex items-center gap-3 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                    className="flex items-center gap-3 cursor-pointer w-full px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
                     <span className="material-symbols-outlined text-[20px]">logout</span>
                     <span className="text-sm font-medium">Log Out</span>
                 </button>
