@@ -40,6 +40,9 @@ export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
         {txn.customerMobile}
       </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
+        {txn.paymentMode}
+      </td>
       <td className="px-6 py-4 whitespace-nowrap">
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border
           ${isRecharge 

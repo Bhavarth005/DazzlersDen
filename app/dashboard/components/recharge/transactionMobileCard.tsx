@@ -54,7 +54,7 @@ export default function TransactionMobileCard({ txn, isSelected, onToggle }: Pro
             {txn.type}
          </span>
          <span className={`text-lg font-bold ${isRecharge ? 'text-green-600 dark:text-green-400' : 'text-[#0d141c] dark:text-white'}`}>
-            ₹{txn.amount}
+            ({txn.paymentMode}) ₹{txn.amount}
          </span>
       </div>
     </div>

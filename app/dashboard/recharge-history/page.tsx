@@ -407,6 +407,7 @@ export default function RechargeHistory() {
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Date & Time</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Customer</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Phone</th>
+                  <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Payment Mode</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Type</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase text-right">Amount</th>
                   <th className="px-6 py-4 w-15"></th>
