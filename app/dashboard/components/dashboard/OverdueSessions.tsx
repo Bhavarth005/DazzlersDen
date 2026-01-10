@@ -1,8 +1,8 @@
 'use client'
 
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import ExitConfirmationModal from "./ExitConfirmationModal"; // Adjust path
 
 export type OverdueSession = {
     id: number;
@@ -17,12 +17,11 @@ export type OverdueSession = {
 
 // --- Overdue Exit Button ---
 function OverdueExitButton({ sessionId, refreshData, fullWidth }: { sessionId: number, refreshData: () => void, fullWidth?: boolean }) {
-    const [markingExit, setMarkingExit] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleExit = async () => {
-        if (!confirm("Confirm exit for this overdue session?")) return;
-
-        setMarkingExit(true);
+    const handleConfirmExit = async () => {
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('access_token');
             const res = await fetch(`/api/sessions/${sessionId}/exit`, {
@@ -32,28 +31,37 @@ function OverdueExitButton({ sessionId, refreshData, fullWidth }: { sessionId: n
 
             if (res.ok) {
                 toast.success("Exit marked successfully");
+                setIsModalOpen(false);
                 refreshData(); 
             } else {
                 const err = await res.json();
                 toast.error(err.detail || "Failed to mark exit");
-                setMarkingExit(false);
             }
         } catch (error) {
             console.error(error);
             toast.error("Network error");
-            setMarkingExit(false);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <button
-            disabled={markingExit}
-            onClick={handleExit}
-            className={`inline-flex items-center justify-center px-3 py-1.5 border border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-sm font-semibold transition-colors disabled:text-gray-400 disabled:border-gray-400 disabled:hover:bg-transparent ${fullWidth ? 'w-full py-2 text-sm' : ''}`}
-        >
-            {markingExit && <Loader2 size={14} className="animate-spin mr-2" />}
-            Mark Exit
-        </button>
+        <>
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className={`inline-flex items-center justify-center px-3 py-1.5 border border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg text-xs font-semibold transition-colors disabled:text-gray-400 disabled:border-gray-400 disabled:hover:bg-transparent ${fullWidth ? 'w-full py-2 text-sm' : ''}`}
+            >
+                Mark Exit
+            </button>
+
+            <ExitConfirmationModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmExit}
+                isLoading={isLoading}
+                isOverdue={true} // Triggers the RED warning text
+            />
+        </>
     )
 }
 
@@ -112,7 +120,7 @@ function MobileSessionCard({ entry, refreshData }: { entry: OverdueSession, refr
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">{entry.startTime}</p>
                 </div>
                 <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">End</p>
+                    <p className="text-xs text-slate-500 uppercase tracking-wide">Expected End</p>
                     <p className="text-sm font-medium text-slate-700 dark:text-slate-200 mt-1">{entry.endTime}</p>
                 </div>
             </div>
@@ -203,7 +211,7 @@ export default function OverdueSessions({ entries, refreshData }: { entries: Ove
                                 <TableRow key={entry.id} entry={entry} refreshData={refreshData} />
                             ))}
                             {paginatedRows.length === 0 && (
-                                <tr><td colSpan={6} className="p-8 text-center text-slate-500">No overdue sessions found</td></tr>
+                                <tr><td colSpan={8} className="p-8 text-center text-slate-500">No overdue sessions found</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -218,7 +226,6 @@ export default function OverdueSessions({ entries, refreshData }: { entries: Ove
                 {paginatedRows.length === 0 && <div className="text-center p-8 text-slate-500">No overdue sessions found</div>}
             </div>
 
-            {/* Pagination */}
             {filteredRows.length > 0 && (
                 <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 py-4">
                     <span className="text-sm text-slate-500">

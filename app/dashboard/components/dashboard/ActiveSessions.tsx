@@ -1,8 +1,8 @@
 'use client'
 
-import { Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import ExitConfirmationModal from "./ExitConfirmationModal"; // Adjust path as needed
 
 export type ActiveSession = {
     id: number;
@@ -16,12 +16,11 @@ export type ActiveSession = {
 
 // --- Shared Exit Button Logic ---
 function ExitButton({ sessionId, refreshData, fullWidth }: { sessionId: number, refreshData: () => void, fullWidth?: boolean }) {
-    const [markingExit, setMarkingExit] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleExit = async () => {
-        if (!confirm("Confirm exit for this session?")) return;
-
-        setMarkingExit(true);
+    const handleConfirmExit = async () => {
+        setIsLoading(true);
         try {
             const token = localStorage.getItem('access_token');
             const res = await fetch(`/api/sessions/${sessionId}/exit`, {
@@ -31,28 +30,37 @@ function ExitButton({ sessionId, refreshData, fullWidth }: { sessionId: number, 
 
             if (res.ok) {
                 toast.success("Exit marked successfully");
-                refreshData(); // Reload the dashboard data
+                setIsModalOpen(false); // Close modal
+                refreshData(); // Reload dashboard
             } else {
                 const err = await res.json();
                 toast.error(err.detail || "Failed to mark exit");
-                setMarkingExit(false); // Only reset loading on error (on success, row disappears)
             }
         } catch (error) {
             console.error(error);
             toast.error("Network error");
-            setMarkingExit(false);
+        } finally {
+            setIsLoading(false);
         }
     };
 
     return (
-        <button
-            disabled={markingExit}
-            onClick={handleExit}
-            className={`inline-flex items-center justify-center px-3 py-1.5 border border-primary text-primary hover:bg-primary/5 hover:cursor-pointer dark:hover:bg-primary/20 rounded-lg text-sm font-semibold transition-colors disabled:text-gray-400 disabled:border-gray-400 disabled:hover:bg-transparent ${fullWidth ? 'w-full' : ''}`}
-        >
-            {markingExit && <Loader2 size={14} className="animate-spin mr-2" />}
-            Mark Exit
-        </button>
+        <>
+            <button
+                onClick={() => setIsModalOpen(true)}
+                className={`inline-flex items-center justify-center px-3 py-1.5 border border-primary text-primary hover:bg-primary/5 hover:cursor-pointer dark:hover:bg-primary/20 rounded-lg text-sm font-semibold transition-colors ${fullWidth ? 'w-full' : ''}`}
+            >
+                Mark Exit
+            </button>
+
+            <ExitConfirmationModal 
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onConfirm={handleConfirmExit}
+                isLoading={isLoading}
+                isOverdue={false} 
+            />
+        </>
     )
 }
 
@@ -195,7 +203,7 @@ export default function ActiveSessions({ entries, refreshData }: { entries: Acti
                                 <TableRow key={entry.id} entry={entry} refreshData={refreshData} />
                             ))}
                             {paginatedRows.length === 0 && (
-                                <tr><td colSpan={6} className="p-8 text-center text-slate-500">No sessions found</td></tr>
+                                <tr><td colSpan={8} className="p-8 text-center text-slate-500">No sessions found</td></tr>
                             )}
                         </tbody>
                     </table>
@@ -209,7 +217,6 @@ export default function ActiveSessions({ entries, refreshData }: { entries: Acti
                 {paginatedRows.length === 0 && <div className="text-center p-8 text-slate-500">No sessions found</div>}
             </div>
 
-            {/* Pagination UI */}
             {filteredRows.length > 0 && (
                 <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-4 py-4">
                     <span className="text-sm text-slate-500">
