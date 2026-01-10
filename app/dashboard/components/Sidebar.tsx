@@ -4,13 +4,33 @@ import Image from "next/image"
 import SidebarLink from "./SidebarLink"
 import { CircleX, UserCog } from "lucide-react"
 import { sidebarLinks } from "./sidebarLinksConfig";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSidebar } from "./SidebarContext";
+import { toast } from "sonner";
 
 export default function Sidebar({ userRole }: { userRole?: string} ) {
+    const router = useRouter();
+    
     const pathname = usePathname();
     // const [sidebarOpen, setSidebarOpen] = useState(true);
+
+    const handleLogout = async () => {
+        const res = await fetch("/api/logout", {
+            method: "POST"
+        });
+
+        const data = await res.json();
+            
+        if (res.ok) { // Check res.ok instead of relying just on message string
+            localStorage.removeItem("access_token");
+            toast.info("Logged out successfully");
+            
+            setTimeout(() => {
+                router.refresh(); 
+            }, 1000);
+        }
+    }
 
     const { sidebarOpen, setSidebarOpen } = useSidebar();
     const visibleLinks = sidebarLinks.filter((link) => {
@@ -95,7 +115,9 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
                     active={pathname.endsWith("/dashboard/user-management")}
                 />
                 <button
-                    className="flex items-center gap-3 cursor-pointer w-full px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors">
+                    className="flex items-center gap-3 cursor-pointer w-full px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                    onClick={handleLogout}
+                >
                     <span className="material-symbols-outlined text-[20px]">logout</span>
                     <span className="text-sm font-medium">Log Out</span>
                 </button>
