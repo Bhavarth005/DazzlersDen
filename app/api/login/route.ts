@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { verifyPassword, createToken } from '@/lib/auth';
+import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -19,6 +20,16 @@ export async function POST(req: Request) {
     }
 
     const token = createToken(admin.username);
+
+    const cookieStore = await cookies()
+    cookieStore.set('Authorization', `Bearer ${token}`, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7, // 1 week
+    })
+    cookieStore.set("user_role", admin.role);
+
     return NextResponse.json({ access_token: token, token_type: "bearer" });
     
   } catch (e) {
