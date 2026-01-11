@@ -48,12 +48,12 @@ export async function GET(req: Request) {
     
     if (customerName) {
         whereClause.customer = {
-            name: { contains: customerName, mode: 'insensitive' }
+            name: { contains: customerName }
         };
     }
 
     if (paymentMode) {
-        whereClause.paymentMode = { equals: paymentMode, mode: 'insensitive' };
+        whereClause.paymentMode = { equals: paymentMode };
     }
     
     if (startDate || endDate) {
