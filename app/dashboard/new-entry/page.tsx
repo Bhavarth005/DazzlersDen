@@ -296,6 +296,7 @@ export default function NewEntry() {
               </div>
 
               <button
+                // onClick={() => setIsQrModalOpen(true)}
                 onClick={() => setIsQrModalOpen(true)}
                 className="h-16 w-16 flex items-center justify-center bg-primary hover:bg-primary-hover dark:bg-gray-700 dark:hover:bg-gray-600 text-white dark:text-white font-medium rounded-lg border border-slate-300 dark:border-gray-600 transition-colors"
                 title="Scan QR Code"

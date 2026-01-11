@@ -144,7 +144,7 @@ export default function BonusConfiguration() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark md:p-2">
+    <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-2 md:p-2">
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
         
         {/* Page Header */}

@@ -105,7 +105,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-300 mx-auto flex flex-col gap-8">
+    <div className="max-w-300 mx-auto flex flex-col gap-8 p-2">
 
       {/* Top Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

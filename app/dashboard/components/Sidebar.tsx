@@ -88,7 +88,7 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
                 <CircleX size={36} className="lg:hidden" onClick={() => setSidebarOpen(false)}/>
             </div>
             
-            <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1">
+            <nav className="flex-1 overflow-y-auto py-6 px-3 flex flex-col gap-1 no-scrollbar">
                 {visibleLinks.map((link) => {
                     const isActive = link.exact
                         ? pathname === link.href
