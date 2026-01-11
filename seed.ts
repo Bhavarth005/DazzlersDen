@@ -4,13 +4,13 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  const hash = await bcrypt.hash("admin123", 10);
+  const hash = await bcrypt.hash("superadmin123", 10);
 
   const admin = await prisma.admin.create({
     data: {
-      username: "admin",
+      username: "superadmin",
       passwordHash: hash,
-      role: "ADMIN"
+      role: "SUPERADMIN"
     }
   });
 
