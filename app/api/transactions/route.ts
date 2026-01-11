@@ -7,7 +7,6 @@ import { sendRechargeMessage } from '@/lib/whatsapp';
 import { z } from 'zod';
 
 // --- FIXED SCHEMA ---
-// Removed { required_error } objects to satisfy TypeScript
 const rechargeSchema = z.object({
   customerId: z.number(), 
   amount: z.number().min(1, "Amount must be positive"),
@@ -25,14 +24,20 @@ function toIST(date: Date | string | null) {
     });
 }
 
-// --- GET: List History & Export (CSV/PDF) ---
+// --- GET: List History, Stats & Export ---
 export async function GET(req: Request) {
   try {
     await getCurrentAdmin(req);
 
     const { searchParams } = new URL(req.url);
-    const format = searchParams.get('format') || 'json'; 
+    const format = searchParams.get('format') || 'json';
+    const fetchStats = searchParams.get('stats') === 'true'; // CHECK FOR STATS REQUEST
     
+    // Pagination Params (Default: Page 1, Limit 10)
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '10');
+    const skip = (page - 1) * limit;
+
     // Filters
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
@@ -57,22 +62,62 @@ export async function GET(req: Request) {
         if (endDate) whereClause.date.lte = new Date(endDate);
     }
 
-    // Fetch Data
+    // --- FEATURE 1: TRANSACTION STATS (Restored) ---
+    // If client asks for stats (e.g. ?stats=true), return totals instead of list
+    if (fetchStats) {
+        const aggregations = await prisma.transaction.groupBy({
+            by: ['paymentMode'],
+            _sum: { amount: true },
+            where: whereClause, // Stats respect current filters (date, name, etc.)
+        });
+
+        // Format: { UPI: 5000, CASH: 2000, TOTAL: 7000 }
+        const stats = aggregations.reduce((acc, curr) => {
+            const mode = curr.paymentMode || 'UNKNOWN';
+            acc[mode] = curr._sum.amount || 0;
+            acc.TOTAL += curr._sum.amount || 0;
+            return acc;
+        }, { TOTAL: 0 } as Record<string, number>);
+
+        return NextResponse.json(stats);
+    }
+
+    // --- MAIN QUERY ---
+    // We only use pagination (skip/take) if format is JSON. 
+    // Exports (CSV/PDF) usually need ALL data, so we check format first.
+    
+    const isExport = format === 'csv' || format === 'pdf';
+
+    // 1. Fetch Data
     const transactions = await prisma.transaction.findMany({
         where: whereClause,
         include: {
             customer: { select: { name: true, mobileNumber: true } },
             admin: { select: { username: true } }
         },
-        orderBy: { date: 'desc' }
+        orderBy: { date: 'desc' },
+        // Only apply skip/limit if NOT exporting
+        ...( !isExport && { skip, take: limit } )
     });
 
-    // 1. Return JSON (Standard API)
+    // 2. Get Total Count (For Pagination UI)
+    const totalCount = await prisma.transaction.count({ where: whereClause });
+
+    // --- RETURN JSON (Standard API) ---
     if (format === 'json') {
-        return NextResponse.json(transactions);
+        return NextResponse.json({
+            data: transactions,
+            pagination: {
+                total: totalCount,
+                page,
+                limit,
+                totalPages: Math.ceil(totalCount / limit)
+            }
+        });
     }
 
-    // 2. Format for Export
+    // --- EXPORT LOGIC (CSV/PDF) ---
+    // Format data for export
     const exportData = transactions.map(t => ({
         ID: t.id,
         Date: toIST(t.date), 
@@ -118,13 +163,12 @@ export async function GET(req: Request) {
   }
 }
 
-// --- POST: Handle Recharge (With Offers & WhatsApp) ---
+// --- POST: Handle Recharge (Unchanged) ---
 export async function POST(req: Request) {
   try {
     const admin = await getCurrentAdmin(req);
     const rawBody = await req.json();
 
-    // 1. Validation
     const body = rechargeSchema.parse(rawBody); 
 
     const customer = await prisma.customer.findUnique({ 
@@ -135,7 +179,6 @@ export async function POST(req: Request) {
         return NextResponse.json({ detail: "Customer not found" }, { status: 404 });
     }
 
-    // 2. Check Offers
     const offer = await prisma.rechargeOffer.findFirst({
       where: {
         triggerAmount: body.amount,
@@ -146,15 +189,12 @@ export async function POST(req: Request) {
     const bonus = offer ? offer.bonusAmount : 0;
     const totalWalletAdd = body.amount + bonus;
 
-    // 3. Atomic Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Update Customer Balance
       const updatedCustomer = await tx.customer.update({
         where: { id: body.customerId },
         data: { currentBalance: { increment: totalWalletAdd } }
       });
 
-      // Create MAIN Transaction
       const mainTxn = await tx.transaction.create({
         data: {
           customerId: body.customerId,
@@ -165,7 +205,6 @@ export async function POST(req: Request) {
         }
       });
 
-      // Create BONUS Transaction (if any)
       if (bonus > 0) {
         await tx.transaction.create({
           data: {
@@ -181,7 +220,6 @@ export async function POST(req: Request) {
       return { mainTxn, updatedCustomer };
     });
 
-    // 4. Send WhatsApp
     await sendRechargeMessage(
         customer.name,
         customer.mobileNumber,
@@ -199,7 +237,6 @@ export async function POST(req: Request) {
     });
 
   } catch (e: any) {
-    // FIX: Use e.flatten() or e.message to avoid "Property 'errors' does not exist"
     if (e instanceof z.ZodError) {
         return NextResponse.json({ detail: e.flatten() }, { status: 400 });
     }
