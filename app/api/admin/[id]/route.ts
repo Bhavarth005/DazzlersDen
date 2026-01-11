@@ -5,29 +5,28 @@ import { getCurrentAdmin } from '@/lib/auth';
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  // 1. FIXED: Type definition now expects a Promise
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // 1. Check Authentication (Only Superadmins can delete admins)
+    // 2. FIXED: Await the params to get the actual ID
+    const { id } = await params; 
+    
+    // Check Authentication
     const currentAdmin = await getCurrentAdmin(req);
     
-    // Optional: Check if current admin is SUPERADMIN
-    // if (currentAdmin.role !== 'SUPERADMIN') {
-    //   return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
-    // }
-
-    const adminIdToDelete = parseInt(params.id);
+    const adminIdToDelete = parseInt(id);
 
     if (isNaN(adminIdToDelete)) {
       return NextResponse.json({ detail: "Invalid ID" }, { status: 400 });
     }
 
-    // 2. Prevent deleting yourself
+    // Prevent deleting yourself
     if (adminIdToDelete === currentAdmin.id) {
         return NextResponse.json({ detail: "Cannot delete yourself" }, { status: 400 });
     }
 
-    // 3. Check if admin exists
+    // Check if admin exists
     const adminExists = await prisma.admin.findUnique({
       where: { id: adminIdToDelete }
     });
@@ -36,7 +35,7 @@ export async function DELETE(
       return NextResponse.json({ detail: "Admin not found" }, { status: 404 });
     }
 
-    // 4. Delete
+    // Delete
     await prisma.admin.delete({
       where: { id: adminIdToDelete }
     });
