@@ -70,3 +70,24 @@ export async function sendRechargeMessage(name: string, mobile: string, amount: 
         console.error("Failed to send Recharge WhatsApp:", error);
     }
 }
+
+
+
+export async function sendBroadcastMessage(mobileNumber: string, messageBody: string) {
+  try {
+    const formattedNumber = mobileNumber.startsWith('+91') 
+      ? mobileNumber 
+      : `+91${mobileNumber}`;
+
+    await client.messages.create({
+      from: whatsappNumber,
+      to: `whatsapp:${formattedNumber}`,
+      body: messageBody
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error(`Failed to send to ${mobileNumber}:`, error);
+    return { success: false, error };
+  }
+}

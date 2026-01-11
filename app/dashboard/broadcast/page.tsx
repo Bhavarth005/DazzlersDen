@@ -45,24 +45,50 @@ export default function BroadcastPage() {
 
     const handleSendBroadcast = async () => {
         setIsSending(true);
-        
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
 
-        const newLog: BroadcastLog = {
-            id: Math.random(),
-            message: message,
-            recipients: 245, // Mock count
-            channel: selectedChannel,
-            status: "SENT",
-            sentAt: new Date().toLocaleString()
-        };
+        try {
+            const token = localStorage.getItem("access_token"); 
 
-        setHistory([newLog, ...history]);
-        setIsSending(false);
-        setIsConfirmModalOpen(false);
-        setMessage("");
-        alert("Broadcast queued successfully!");
+            if (!token) {
+                alert("You are not logged in! Please login again.");
+                window.location.href = "/login"; // Redirect if needed
+                return;
+            }
+            const response = await fetch('/api/broadcast', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}` 
+                },
+                body: JSON.stringify({ message }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.detail || "Failed to send broadcast");
+            }
+
+            const newLog: BroadcastLog = {
+                id: Math.random(),
+                message: message,
+                recipients: data.sent,
+                channel: selectedChannel,
+                status: data.failed > 0 ? "FAILED" : "SENT",
+                sentAt: new Date().toLocaleString()
+            };
+
+            setHistory([newLog, ...history]);
+            setMessage("");
+            setIsConfirmModalOpen(false);
+            
+            alert(`Broadcast Report:\nSuccess: ${data.sent}\nFailed: ${data.failed}`);
+
+        } catch (error: any) {
+            alert("Error: " + error.message);
+        } finally {
+            setIsSending(false);
+        }
     };
 
     return (

@@ -87,7 +87,6 @@ export async function GET(req: Request) {
     // CASE C: PDF Export (Detailed Dossier)
     // ---------------------------------------------------------
     if (format === 'pdf') {
-        // Note: You need to ensure generateCustomerStatementPDF accepts this structure
         const pdfBuffer = await generateCustomerStatementPDF(customers);
         return new NextResponse(pdfBuffer as any, {
             headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="customer_statements_${Date.now()}.pdf"` }
@@ -106,7 +105,13 @@ export async function POST(req: Request) {
   try {
     const admin = await getCurrentAdmin(req);
     const rawBody = await req.json(); 
+    
+    // Validate core fields
     const body = customerCreateSchema.parse(rawBody);
+    
+    // Extract paymentMode directly from rawBody (Defaults to CASH)
+    // We do this here so it works even if you haven't updated the Zod schema file yet
+    const paymentMode = (rawBody as any).paymentMode || "CASH";
     
     // 1. Check duplicate mobile
     const existing = await prisma.customer.findUnique({
@@ -149,7 +154,7 @@ export async function POST(req: Request) {
             adminId: admin.id,
             transactionType: "RECHARGE",
             amount: initialAmount,
-            paymentMode: "CASH"
+            paymentMode: paymentMode // <--- NOW DYNAMIC
           }
         });
 
@@ -169,10 +174,11 @@ export async function POST(req: Request) {
     });
 
     // 4. Send WhatsApp
+    // Note: Ensure 'qrCodeUuid' exists on your Prisma model, otherwise this might be undefined
     await sendWelcomeMessage(
         result.name, 
         result.mobileNumber, 
-        result.qrCodeUuid, 
+        (result as any).qrCodeUuid, 
         result.currentBalance
     );
 
