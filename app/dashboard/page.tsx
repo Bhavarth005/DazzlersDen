@@ -33,25 +33,18 @@ export default function Dashboard() {
       const token = localStorage.getItem('access_token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // Parallel Fetch: Stats + Active List + Overdue List
-      const [statsRes, activeRes, overdueRes] = await Promise.all([
-        fetch('/api/stats', { headers }),
-        fetch('/api/dashboard/active', { headers }),
-        fetch('/api/dashboard/overdue', { headers })
-      ]);
+      // CHANGE: Single fetch instead of Promise.all
+      // Ensure '/api/dashboard' matches your actual unified endpoint URL
+      const response = await fetch('/api/dashboard', { headers });
 
-      if (!statsRes.ok || !activeRes.ok || !overdueRes.ok) {
+      if (!response.ok) {
         throw new Error("Failed to fetch dashboard data");
       }
 
-      const statsData = await statsRes.json();
-      const activeRaw = await activeRes.json();
-      const overdueRaw = await overdueRes.json();
+      const data = await response.json();
 
-      console.log(activeRaw);
-
-      // --- Process Active Sessions List ---
-      const processedActive: ActiveSession[] = activeRaw.map((item: any) => ({
+      // --- Process Active Sessions List (from data.lists.active_sessions) ---
+      const processedActive: ActiveSession[] = data.lists.active_sessions.map((item: any) => ({
         id: item.id,
         name: item.customer.name,
         phoneNo: item.customer.mobileNumber,
@@ -61,9 +54,9 @@ export default function Dashboard() {
         endTime: formatTime(item.expectedEndTime),
       }));
 
-      // --- Process Overdue Sessions List ---
+      // --- Process Overdue Sessions List (from data.lists.overdue_sessions) ---
       const now = new Date();
-      const processedOverdue: OverdueSession[] = overdueRaw.map((item: any) => {
+      const processedOverdue: OverdueSession[] = data.lists.overdue_sessions.map((item: any) => {
         const expectedEnd = new Date(item.expectedEndTime);
         const diffMs = now.getTime() - expectedEnd.getTime();
         const overdueMinutes = Math.floor(diffMs / 60000); 
@@ -84,11 +77,11 @@ export default function Dashboard() {
       setActiveData(processedActive);
       setOverdueData(processedOverdue);
       
-      // Use data directly from Stats API
+      // Map stats from data.stats
       setStats({
-        activeCount: statsData.active_sessions,
-        revenue: statsData.monthly_revenue,
-        pendingExits: statsData.overdue_sessions
+        activeCount: data.stats.active_sessions,
+        revenue: data.stats.monthly_revenue,
+        pendingExits: data.stats.overdue_sessions
       });
 
     } catch (error) {

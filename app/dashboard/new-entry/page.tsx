@@ -178,17 +178,17 @@ export default function NewEntry() {
     try {
       const token = localStorage.getItem('access_token');
       const amount = parseFloat(inputBalance);
-      const res = await fetch('/api/recharge', {
+      const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
-          customer_id: customer.id,
+          customerId: customer.id,
           amount: amount,
-          transaction_type: "RECHARGE",
-          payment_mode: paymentType
+          transactionType: "RECHARGE",
+          paymentMode: paymentType
         })
       });
 

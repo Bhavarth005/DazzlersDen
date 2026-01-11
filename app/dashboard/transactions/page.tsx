@@ -69,13 +69,12 @@ export default function Transactions() {
         const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
         const skip = (currentPage - 1) * pageSize;
         const params = new URLSearchParams({
-            skip: skip.toString(),
-            limit: pageSize.toString(),
-            search: searchTerm,
-            start_date: start,
-            end_date: end
+          payment_mode: "",
+          customer_name: searchTerm,
+          start_date: start,
+          end_date: end
         });
-
+      
         const res = await fetch(`/api/transactions?${params.toString()}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -86,7 +85,7 @@ export default function Transactions() {
         const json = await res.json();
 
         // Map Data
-        const mappedData = (json.data || []).map((t: any) => ({
+        const mappedData = (json || []).map((t: any) => ({
             id: t.id.toString(),
             customerId: t.customerId,
             customerName: t.customer?.name || "Unknown",
@@ -127,12 +126,12 @@ export default function Transactions() {
         const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
         const params = new URLSearchParams({
           format,
-          search: searchTerm,
+          customer_name: searchTerm,
           start_date: start,
           end_date: end
         });
         const token = localStorage.getItem("access_token");
-        const url = `/api/export/transactions?${params.toString()}`;
+        const url = `/api/transactions?${params.toString()}`;
 
         // 1. Fetch the data with the Header
         const response = await fetch(url, {

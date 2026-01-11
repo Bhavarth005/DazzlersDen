@@ -361,6 +361,10 @@ export default function EntryHistory() {
                 onTap={() => setViewingEntry(entry)}
             />
           ))}
+
+          {!isLoading && entries.length === 0 && (
+            <div className="px-6 py-8 text-center text-slate-500">No entries found.</div>
+          )}
         </div>
 
         {/* --- FOOTER --- */}

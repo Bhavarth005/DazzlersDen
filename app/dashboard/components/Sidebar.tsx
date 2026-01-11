@@ -13,7 +13,6 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
     const router = useRouter();
     
     const pathname = usePathname();
-    // const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const handleLogout = async () => {
         const res = await fetch("/api/logout", {
@@ -108,12 +107,12 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
             </nav>
             
             <div className="flex flex-col gap-2 p-4 border-t border-slate-800">
-                <SidebarLink
+                {userRole === "SUPERADMIN" && <SidebarLink
                     title='User Management'
                     icon={UserCog}
                     href={'/dashboard/user-management'}
                     active={pathname.endsWith("/dashboard/user-management")}
-                />
+                />}
                 <button
                     className="flex items-center gap-3 cursor-pointer w-full px-3 py-3 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                     onClick={handleLogout}

@@ -181,14 +181,15 @@ export default function CustomerManagement() {
   };
 
   const handleExport = async (format: 'pdf' | 'csv') => {
+    console.log(selection.selectedIds.join(","));
     try {
         const params = new URLSearchParams({
           format,
+          search: searchTerm
         });
         const token = localStorage.getItem("access_token");
-        const url = `/api/export/customers?${params.toString()}`;
+        const url = `/api/customers?${params.toString()}`;
 
-        // 1. Fetch the data with the Header
         const response = await fetch(url, {
             method: 'GET',
             headers: {

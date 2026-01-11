@@ -79,6 +79,8 @@ export default function UserManagement() {
         e.preventDefault();
         if (!formData.username || !formData.password) return;
 
+        console.log(formData)
+
         setIsSubmitting(true);
         
         try {
