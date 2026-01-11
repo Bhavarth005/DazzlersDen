@@ -33,3 +33,15 @@
   --radius-xl: 0.75rem;
   --radius-full: 9999px;
 }
+
+@layer base {
+  html {
+    font-size: 14px; 
+  }
+
+  @media (min-width: 768px) {
+    html {
+      font-size: 16px;
+    }
+  }
+}

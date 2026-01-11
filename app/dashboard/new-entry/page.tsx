@@ -410,22 +410,22 @@ export default function NewEntry() {
             </div>
 
             {/* Discount */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4 lg:gap-3">
               <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Discount</label>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-2 lg:gap-4">
                 <p className="text-lg font-semibold text-slate-700 dark:text-white">Discount %</p>
                 <input
                   value={discountPercent}
                   onChange={(e) => setDiscountPercent(e.target.value)}
-                  className="w-32 px-4 h-12 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  className="w-full lg:w-32 px-4 h-12 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   placeholder="0" type="number" min="0" max="100" />
               </div>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex items-start flex-col justify-between gap-2 lg:gap-4 lg:flex-row lg:items-center">
                 <p className="text-lg font-semibold text-slate-700 dark:text-white">Reason</p>
                 <input
                   value={discountReason}
                   onChange={(e) => setDiscountReason(e.target.value)}
-                  className="w-64 px-4 h-12 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                  className="w-full lg:w-64 px-4 h-12 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                   placeholder="Optional" type="text" />
               </div>
             </div>

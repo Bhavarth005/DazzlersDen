@@ -62,62 +62,6 @@ export default function Transactions() {
 
   const selection = useSelection([]);
 
-  // --- API CALL ---
-  // const loadData = async () => {
-  //     setIsLoading(true);
-  //     const token = localStorage.getItem('access_token');
-  //     if (!token) { router.push('/auth/login'); return; }
-
-  //     try {
-  //       const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
-  //       const skip = (currentPage - 1) * pageSize;
-  //       const params = new URLSearchParams({
-  //         payment_mode: "",
-  //         customer_name: searchTerm,
-  //         start_date: start,
-  //         end_date: end
-  //       });
-
-  //       const res = await fetch(`/api/transactions?${params.toString()}`, {
-  //           headers: { 'Authorization': `Bearer ${token}` }
-  //       });
-
-  //       if (res.status === 401) { router.push('/auth/login'); return; }
-  //       if (!res.ok) throw new Error("Failed to fetch data");
-
-  //       const json = await res.json();
-
-  //       // Map Data
-  //       const mappedData = (json.data || []).map((t: any) => ({
-  //           id: t.id.toString(),
-  //           customerId: t.customerId,
-  //           customerName: t.customer?.name || "Unknown",
-  //           customerMobile: t.customer?.mobileNumber || "N/A",
-  //           amount: t.amount,
-  //           type: t.transactionType,
-  //           date: new Date(t.date).toLocaleDateString(),
-  //           time: new Date(t.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  //           paymentMode: t.paymentMode || "-"
-  //       }));
-
-  //       setTransactions(mappedData);
-  //       setTotalPages(Math.ceil((json.pagination?.total || 0) / pageSize));
-
-  //       // Update Stats
-  //       setStats({
-  //           cash: (json.stats?.CASH || 0).toLocaleString('en-IN'),
-  //           upi: (json.stats?.UPI || 0).toLocaleString('en-IN'),
-  //           total: (json.stats?.TOTAL || 0).toLocaleString('en-IN')
-  //       });
-
-  //     } catch (error) {
-  //       console.error("Failed to fetch", error);
-  //       toast.error("Could not load transactions");
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   };
-
   const loadData = async () => {
     setIsLoading(true);
     const token = localStorage.getItem('access_token');
@@ -352,29 +296,31 @@ export default function Transactions() {
 
           {selection.selectedIds.length > 0 ? (
             // --- SELECTION HEADER ---
-            <div className="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 flex items-center justify-between animate-in fade-in">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between  w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 animate-in fade-in">
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 p-2 text-lg">
                   <span className="font-semibold text-slate-700 dark:text-blue-100">
                     {selection.selectedIds.length} Selected
                   </span>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                <button onClick={() => selection.setSelectedIds([])} className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white/50 rounded-md transition-colors">Cancel</button>
-                <button onClick={handleBulkDelete} className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
+              <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+                <button onClick={() => selection.setSelectedIds([])} className="flex w-full items-center gap-2 p-3 text-slate-600 dark:text-slate-300 hover:bg-white/50 text-sm font-medium rounded-md  transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">close</span>Cancel
+                </button>
+                <button onClick={handleBulkDelete} className="flex w-full items-center gap-2 p-3 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
                   <span className="material-symbols-outlined text-[18px]">delete</span> Delete
                 </button>
               </div>
             </div>
           ) : (
             // --- STANDARD HEADER ---
-            <>
+            <div className="flex flex-col gap-4 lg:flex-row w-full justify-between items-start lg:items-center">
               <h2 className="text-2xl font-bold text-[#0d141c] dark:text-white">Transactions</h2>
 
-              <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
+              <div className="flex flex-col lg:flex-row flex-wrap items-stretch sm:items-center gap-3 w-full lg:w-auto">
                 {/* Search */}
-                <div className="relative group sm:min-w-60 flex-1">
+                <div className="relative group w-full flex-1">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <span className="material-symbols-outlined">search</span>
                   </div>
@@ -388,14 +334,14 @@ export default function Transactions() {
                 </div>
 
                 {/* Payment Mode Dropdown - ADDED THIS SECTION */}
-                <div className="relative z-50">
+                <div className="relative z-50 w-full lg:w-auto">
                   <button
                     onClick={() => {
                       setIsPaymentDropdownOpen(!isPaymentDropdownOpen);
                       setIsDateDropdownOpen(false);
                       setIsExportDropdownOpen(false);
                     }}
-                    className="w-full sm:w-40 flex items-center justify-between pl-3 pr-3 py-2.5 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg text-sm text-[#0d141c] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                    className="w-full lg:w-40 flex items-center justify-between pl-3 pr-3 py-2.5 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg text-sm text-[#0d141c] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                   >
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-slate-400">payments</span>
@@ -424,14 +370,14 @@ export default function Transactions() {
                 </div>
 
                 {/* Date Dropdown */}
-                <div className="relative z-40">
+                <div className="relative z-40 w-full lg:w-auto">
                   <button
                     onClick={() => {
                       setIsDateDropdownOpen(!isDateDropdownOpen);
                       setIsPaymentDropdownOpen(false); // Close payment dropdown
                       setIsExportDropdownOpen(false);
                     }}
-                    className="w-full sm:w-45 flex items-center justify-between pl-3 pr-3 py-2.5 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg text-sm text-[#0d141c] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+                    className="w-full lg:w-45 flex items-center justify-between pl-3 pr-3 py-2.5 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg text-sm text-[#0d141c] dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                   >
                     <div className="flex items-center gap-2">
                       <span className="material-symbols-outlined text-slate-400">calendar_today</span>
@@ -440,7 +386,7 @@ export default function Transactions() {
                     <span className="material-symbols-outlined text-slate-400 text-sm">expand_more</span>
                   </button>
                   {isDateDropdownOpen && (
-                    <div className="absolute top-full mt-1 left-0 w-full sm:w-45 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg overflow-hidden flex flex-col z-50">
+                    <div className="absolute top-full mt-1 left-0 w-full lg:w-45 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg overflow-hidden flex flex-col z-50">
                       {['Today', 'This Month', 'Last Month', 'Custom'].map((option) => (
                         <button key={option} onClick={() => { setDateFilter(option); setIsDateDropdownOpen(false); }} className="px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
                           {option}
@@ -462,34 +408,33 @@ export default function Transactions() {
                     />
                   </div>
                 )}
-
                 {/* Export Dropdown */}
-                <div className="relative z-20 flex-1 sm:flex-none">
-                  <button
-                    onClick={() => {
-                      setIsExportDropdownOpen(!isExportDropdownOpen);
-                      setIsDateDropdownOpen(false);
-                      setIsPaymentDropdownOpen(false); // Close payment dropdown
-                    }}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm shadow-blue-500/30 transition-all active:scale-95"
-                  >
-                    <span className="material-symbols-outlined text-[20px]">download</span>
-                    <span>Export</span>
-                    <span className="material-symbols-outlined text-[18px]">expand_more</span>
-                  </button>
-                  {isExportDropdownOpen && (
-                    <div className="absolute top-full mt-1 right-0 w-full sm:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100 z-50">
-                      <button onClick={() => handleExport('pdf')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
-                      </button>
-                      <button onClick={() => handleExport('csv')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-                        <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  <div className="relative z-20 flex-1 sm:flex-none">
+                    <button
+                      onClick={() => {
+                        setIsExportDropdownOpen(!isExportDropdownOpen);
+                        setIsDateDropdownOpen(false);
+                        setIsPaymentDropdownOpen(false); // Close payment dropdown
+                      }}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm shadow-blue-500/30 transition-all active:scale-95"
+                    >
+                      <span className="material-symbols-outlined text-[20px]">download</span>
+                      <span>Export</span>
+                      <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                    </button>
+                    {isExportDropdownOpen && (
+                      <div className="absolute top-full mt-1 right-0 w-full sm:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100 z-50">
+                        <button onClick={() => handleExport('pdf')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                          <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
+                        </button>
+                        <button onClick={() => handleExport('csv')} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                          <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
+                        </button>
+                      </div>
+                    )}
+                  </div>
               </div>
-            </>
+            </div>
           )}
         </div>
 

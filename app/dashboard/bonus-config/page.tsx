@@ -144,7 +144,7 @@ export default function BonusConfiguration() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-8">
+    <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark md:p-2">
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
         
         {/* Page Header */}
@@ -162,8 +162,8 @@ export default function BonusConfiguration() {
           
           {/* Table Header */}
           <div className="grid grid-cols-12 gap-4 px-6 py-4 bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700 text-xs font-semibold uppercase text-slate-500 dark:text-slate-400">
-            <div className="col-span-5">Recharge Amount (₹)</div>
-            <div className="col-span-5">Bonus Credit (₹)</div>
+            <div className="col-span-5">Recharge (₹)</div>
+            <div className="col-span-5">Bonus (₹)</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
 

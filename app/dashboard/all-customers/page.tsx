@@ -185,7 +185,8 @@ export default function CustomerManagement() {
     try {
         const params = new URLSearchParams({
           format,
-          search: searchTerm
+          search: searchTerm,
+          customer_id: selection.selectedIds.join(",")
         });
         const token = localStorage.getItem("access_token");
         const url = `/api/customers?${params.toString()}`;
@@ -200,7 +201,6 @@ export default function CustomerManagement() {
 
         if (!response.ok) throw new Error("Export failed");
 
-        // 2. Get the filename from headers (Optional, but recommended)
         // Look for: Content-Disposition: attachment; filename="transactions.csv"
         const disposition = response.headers.get('Content-Disposition');
         let filename = 'customers.csv';
@@ -289,29 +289,31 @@ export default function CustomerManagement() {
           {/* HEADER SECTION */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 min-h-12.5">
             {selection.selectedIds.length > 0 ? (
-              // Selected Header
-              <div className="w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 flex items-center justify-between animate-in fade-in slide-in-from-top-2">
-                <div className="flex items-center gap-4">
+              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between  w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 animate-in fade-in">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 p-2 text-lg">
                   <span className="font-semibold text-slate-700 dark:text-blue-100">
                     {selection.selectedIds.length} Selected
                   </span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <button onClick={() => selection.setSelectedIds([])} className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-white/50 rounded-md">Cancel</button>
-                  <button onClick={() => setIsDeleteModalOpen(true)} className="flex items-center gap-2 px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm">
-                    <span className="material-symbols-outlined text-[18px]">delete</span> Delete
-                  </button>
-                </div>
               </div>
+              <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
+                <button onClick={() => selection.setSelectedIds([])} className="flex w-full items-center gap-2 p-3 text-slate-600 dark:text-slate-300 hover:bg-white/50 text-sm font-medium rounded-md  transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">close</span>Cancel
+                </button>
+                <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-3 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
+                  <span className="material-symbols-outlined text-[18px]">delete</span> Delete
+                </button>
+              </div>
+            </div>
             ) : (
               // Standard Header
-              <>
+              <div className="flex flex-col md:flex-row w-full items-start lg:items-center gap-4 justify-between">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Customer Management</h2>
-                  <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">View and manage all registered customers.</p>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="relative group">
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                  <div className="relative group w-full">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <span className="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
                     </div>
@@ -319,35 +321,32 @@ export default function CustomerManagement() {
                       type="text"
                       value={searchTerm}
                       onChange={handleSearch}
-                      className="block w-full sm:w-64 pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white sm:text-sm focus:ring-1 focus:ring-primary focus:border-primary"
+                      className="block w-full lg:w-64 pl-10 pr-3 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white sm:text-sm focus:ring-1 focus:ring-primary focus:border-primary"
                       placeholder="Search ID, Name, Mobile..."
                     />
                   </div>
-                  <button className="inline-flex items-center justify-center px-4 py-2.5 text-sm font-medium rounded-lg text-white bg-primary hover:bg-primary-hover shadow-sm transition-colors">
-                    <span className="material-symbols-outlined mr-2" style={{ fontSize: '20px' }}>add</span> Add Customer
-                  </button>
 
-                  {/* Export Dropdown */}
-                  <div className="relative z-20 flex-1 sm:flex-none">
-                    <button onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)} className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
-                      <span className="material-symbols-outlined text-[20px]">download</span>
-                      <span>Export</span>
-                      <span className="material-symbols-outlined text-[18px]">expand_more</span>
-                    </button>
-                    {isExportDropdownOpen && (
-                      <div className="absolute top-full mt-1 right-0 w-full sm:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg flex flex-col z-50">
-                        <button onClick={() => handleExport("pdf")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
-                          <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
-                        </button>
-                        <button onClick={() => handleExport("csv")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
-                          <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
-                        </button>
-                      </div>
-                    )}
-                  </div>
                 </div>
-              </>
+              </div>
             )}
+              {/* Export Dropdown */}
+              <div className="relative z-20 flex-1 sm:flex-none">
+                <button onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)} className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-primary hover:bg-blue-600 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
+                  <span className="material-symbols-outlined text-[20px]">download</span>
+                  <span>Export</span>
+                  <span className="material-symbols-outlined text-[18px]">expand_more</span>
+                </button>
+                {isExportDropdownOpen && (
+                  <div className="absolute top-full mt-1 right-0 w-full md:w-40 bg-white dark:bg-[#1e2836] border border-[#e7edf4] dark:border-slate-700 rounded-lg shadow-lg flex flex-col z-50">
+                    <button onClick={() => handleExport("pdf")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                      <span className="material-symbols-outlined text-red-500 text-[18px]">picture_as_pdf</span> PDF
+                    </button>
+                    <button onClick={() => handleExport("csv")} className="flex items-center gap-3 px-4 py-2.5 text-left text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700">
+                      <span className="material-symbols-outlined text-green-500 text-[18px]">table_view</span> CSV
+                    </button>
+                  </div>
+                )}
+              </div>
           </div>
 
           {/* --- DESKTOP TABLE --- */}

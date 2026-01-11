@@ -13,7 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <Sidebar userRole={userRole} />
           <div className="flex flex-1 flex-col h-full overflow-hidden relative">
             <Header />
-            <main className="flex-1 overflow-y-auto p-6 lg:p-10 scroll-smooth">
+            <main className="flex-1 overflow-y-auto p-2 lg:p-10 scroll-smooth">
               {children}
             </main>
           </div>
