@@ -37,12 +37,12 @@ export async function sendSessionStartMessage(name: string, mobile: string, cost
     }
 }
 
-export async function sendSessionExitMessage(name: string, mobile: string, endTime: string, balance: number) {
+export async function sendSessionExitMessage(name: string, mobile: string, balance: number) {
     try {
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            body: `*Session Ended!*\n\nHello ${name},\nYour session ended at: ${endTime}\n💰 *Final Balance:* Rs. ${balance}\n\nThanks for visiting Dazzler's Den! 👋`
+            body: `*Session Ended!*\n\nHello ${name},\n*Final Balance:* Rs. ${balance}\n\nThanks for visiting Dazzler's Den! 👋`
         });
         console.log(`Exit WhatsApp sent to ${name}`);
     } catch (error) {

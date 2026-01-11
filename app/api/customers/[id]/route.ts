@@ -2,60 +2,57 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 
-// Helper to parse ID safely
-const getId = async (params: Promise<{ id: string }>) => {
-  const { id } = await params;
-  return parseInt(id);
-};
-
-// PUT: Edit Customer Details
+// UPDATE Customer (PUT)
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await getCurrentAdmin(req);
-    const customerId = await getId(params);
+    const { id } = await params;
     const body = await req.json();
-    
-    // Body: { name, mobile_number, birthdate }
 
+    // 1. Prepare Data Object
+    // We only include fields that are actually present in the body (Partial Update)
+    const updateData: any = {};
+
+    if (body.name) updateData.name = body.name;
+    if (body.mobile_number) updateData.mobileNumber = body.mobile_number; // Map snake_case to camelCase
+    
+    // 2. CRITICAL FIX: Convert String to Date
+    if (body.birthdate) {
+        updateData.birthdate = new Date(body.birthdate);
+    }
+
+    // 3. Perform Update
     const updatedCustomer = await prisma.customer.update({
-      where: { id: customerId },
-      data: {
-        name: body.name,
-        mobileNumber: body.mobile_number,
-        birthdate: body.birthdate ? new Date(body.birthdate) : undefined
-      }
+      where: { id: parseInt(id) },
+      data: updateData
     });
 
     return NextResponse.json(updatedCustomer);
+
   } catch (e: any) {
+    // Handle record not found
+    if (e.code === 'P2025') {
+        return NextResponse.json({ detail: "Customer not found" }, { status: 404 });
+    }
     return NextResponse.json({ detail: e.message }, { status: 500 });
   }
 }
 
-// DELETE: Remove Customer (Hard Delete)
+// DELETE Customer
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    const admin = await getCurrentAdmin(req);
-    const customerId = await getId(params);
+    try {
+        const admin = await getCurrentAdmin(req);
+        // Optional: Only Superadmin can delete customers?
+        // if (admin.role !== 'SUPERADMIN') return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
 
-    // Only SUPERADMIN can delete (Optional security check)
-    // if (admin.role !== 'SUPERADMIN') return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
+        const { id } = await params;
+        await prisma.customer.delete({
+            where: { id: parseInt(id) }
+        });
 
-    // Use transaction to delete ALL history first (Cascading Delete)
-    await prisma.$transaction(async (tx) => {
-      // 1. Delete Transactions
-      await tx.transaction.deleteMany({ where: { customerId: customerId } });
-      
-      // 2. Delete Sessions
-      await tx.session.deleteMany({ where: { customerId: customerId } });
-      
-      // 3. Delete Customer
-      await tx.customer.delete({ where: { id: customerId } });
-    });
-
-    return NextResponse.json({ message: "Customer and all history deleted successfully" });
-
-  } catch (e: any) {
-    return NextResponse.json({ detail: "Failed to delete. Customer might not exist." }, { status: 500 });
-  }
+        return NextResponse.json({ message: "Customer deleted successfully" });
+    } catch (e: any) {
+        if (e.code === 'P2025') return NextResponse.json({ detail: "Customer not found" }, { status: 404 });
+        return NextResponse.json({ detail: e.message }, { status: 500 });
+    }
 }

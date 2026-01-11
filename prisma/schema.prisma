@@ -11,7 +11,7 @@ model Admin {
   id            Int           @id @default(autoincrement())
   username      String        @unique
   passwordHash  String
-  role          String        @default("ADMIN ")
+  role          String        @default("ADMIN")
   createdAt     DateTime      @default(now())
   transactions  Transaction[]
 }
@@ -46,7 +46,7 @@ model Session {
   actualCost         Float
   discountedCost     Float
   
-  customer           Customer  @relation(fields: [customerId], references: [id])
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
 }
 
 model Transaction {
@@ -59,7 +59,7 @@ model Transaction {
   paymentMode     String?  // "CASH", "UPI", or null for deductions
   date            DateTime @default(now())
   
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   admin           Admin?   @relation(fields: [adminId], references: [id])
 }
 

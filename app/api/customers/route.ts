@@ -2,50 +2,111 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getCurrentAdmin } from '@/lib/auth';
 import { sendWelcomeMessage } from '@/lib/whatsapp'; 
-import { customerCreateSchema} from '@/lib/schemas';
+import { customerCreateSchema } from '@/lib/schemas';
+import { generateCustomerStatementPDF } from '@/lib/pdfGenerator';
+import { Parser } from 'json2csv';
 
-// GET: List all customers
+// Helper for Export formatting
+function toIST(date: Date | string | null) {
+    if (!date) return "-";
+    return new Date(date).toLocaleString("en-IN", { 
+        timeZone: "Asia/Kolkata",
+        hour12: true, 
+        day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+    });
+}
+
+// GET: List & Export Customers
 export async function GET(req: Request) {
   try {
     await getCurrentAdmin(req); 
     const { searchParams } = new URL(req.url);
     const search = searchParams.get('search') || "";
+    const format = searchParams.get('format') || 'json';
+    const customerIdsParam = searchParams.get('customer_id');
 
     const whereClause: any = {};
 
-    if (search) {
-      // Check if search term is a number (for ID search)
-      const isNumber = !isNaN(Number(search));
-      
-      whereClause.OR = [
-        { name: { contains: search } }, // Search by Name (partial match)
-        { mobileNumber: { contains: search } }, // Search by Mobile
-      ];
+    // 1. Specific IDs Filter (for Bulk Export)
+    if (customerIdsParam) {
+        const ids = customerIdsParam.split(',').map(id => parseInt(id.trim())).filter(n => !isNaN(n));
+        if (ids.length > 0) {
+            whereClause.id = { in: ids };
+        }
+    }
 
+    // 2. Search Filter
+    if (search) {
+      const isNumber = !isNaN(Number(search));
+      whereClause.OR = [
+        { name: { contains: search } }, 
+        { mobileNumber: { contains: search } }, 
+      ];
       if (isNumber) {
-        whereClause.OR.push({ id: parseInt(search) }); // Search by ID
+        whereClause.OR.push({ id: parseInt(search) });
       }
     }
 
+    // 3. Fetch Data
     const customers = await prisma.customer.findMany({
       where: whereClause,
       orderBy: { createdAt: 'desc' },
-      take: 50 // Optional: Limit results to prevent crashing on empty search
+      // Include related data only if exporting
+      include: (format !== 'json') ? {
+          transactions: { orderBy: { date: 'desc' }, take: 20, include: { admin: true } },
+          sessions: { orderBy: { startTime: 'desc' }, take: 20 }
+      } : undefined
     });
     
-    return NextResponse.json(customers);
-  } catch (e) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    // ---------------------------------------------------------
+    // CASE A: JSON Request (Standard API)
+    // ---------------------------------------------------------
+    if (format === 'json') {
+        return NextResponse.json(customers);
+    }
+
+    // ---------------------------------------------------------
+    // CASE B: CSV Export (Summary)
+    // ---------------------------------------------------------
+    if (format === 'csv') {
+        const flatData = customers.map(c => ({
+            ID: c.id,
+            Name: c.name,
+            Mobile: c.mobileNumber,
+            Balance: c.currentBalance,
+            Joined: toIST(c.createdAt)
+        }));
+        const parser = new Parser();
+        return new NextResponse(parser.parse(flatData), {
+            headers: { 'Content-Type': 'text/csv', 'Content-Disposition': `attachment; filename="customers_${Date.now()}.csv"` }
+        });
+    }
+
+    // ---------------------------------------------------------
+    // CASE C: PDF Export (Detailed Dossier)
+    // ---------------------------------------------------------
+    if (format === 'pdf') {
+        // Note: You need to ensure generateCustomerStatementPDF accepts this structure
+        const pdfBuffer = await generateCustomerStatementPDF(customers);
+        return new NextResponse(pdfBuffer as any, {
+            headers: { 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="customer_statements_${Date.now()}.pdf"` }
+        });
+    }
+
+    return NextResponse.json({ error: "Invalid format" }, { status: 400 });
+
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message || "Unauthorized" }, { status: 500 });
   }
 }
 
-// POST: Create Customer + Initial Transaction (With Offers)
+// POST: Create Customer + Initial Transaction
 export async function POST(req: Request) {
   try {
     const admin = await getCurrentAdmin(req);
     const rawBody = await req.json(); 
     const body = customerCreateSchema.parse(rawBody);
-    // Body: { name, mobile_number, birthdate, initial_balance }
     
     // 1. Check duplicate mobile
     const existing = await prisma.customer.findUnique({
@@ -60,46 +121,38 @@ export async function POST(req: Request) {
     let bonus = 0;
 
     if (initialAmount > 0) {
-      // Check if this initial amount triggers an offer
       const offer = await prisma.rechargeOffer.findFirst({
-        where: {
-          triggerAmount: initialAmount,
-          isActive: true
-        }
+        where: { triggerAmount: initialAmount, isActive: true }
       });
-      if (offer) {
-        bonus = offer.bonusAmount;
-      }
+      if (offer) bonus = offer.bonusAmount;
     }
 
     const totalStartingBalance = initialAmount + bonus;
 
     // 3. Atomic Transaction
     const result = await prisma.$transaction(async (tx) => {
-      // A. Create Customer with the FINAL calculated balance
+      // A. Create Customer
       const newCustomer = await tx.customer.create({
         data: {
           name: body.name,
           mobileNumber: body.mobile_number,
           birthdate: new Date(body.birthdate),
-          currentBalance: totalStartingBalance, // Set balance = Cash + Bonus
+          currentBalance: totalStartingBalance, 
         }
       });
 
       // B. Create Transactions if money was added
       if (initialAmount > 0) {
-        // 1. Main Cash Transaction
         await tx.transaction.create({
           data: {
             customerId: newCustomer.id,
             adminId: admin.id,
             transactionType: "RECHARGE",
             amount: initialAmount,
-            paymentMode: "CASH" // Default for initial creation
+            paymentMode: "CASH"
           }
         });
 
-        // 2. Bonus Transaction (if applicable)
         if (bonus > 0) {
           await tx.transaction.create({
             data: {
@@ -112,9 +165,10 @@ export async function POST(req: Request) {
           });
         }
       }
-
       return newCustomer;
     });
+
+    // 4. Send WhatsApp
     await sendWelcomeMessage(
         result.name, 
         result.mobileNumber, 
@@ -126,13 +180,6 @@ export async function POST(req: Request) {
         ...result,
         message: "Customer created & WhatsApp sent!"
     });
-
-    // return NextResponse.json({
-    //     ...result,
-    //     message: bonus > 0 
-    //         ? `Customer created with balance ${initialAmount} + ${bonus} Bonus!` 
-    //         : "Customer created successfully"
-    // });
 
   } catch (e: any) {
     return NextResponse.json({ detail: e.message || "Server Error" }, { status: 500 });
