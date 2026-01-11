@@ -1,5 +1,6 @@
 import { Entry, APIResponse } from './types';
 
+
 const MOCK_DB: Entry[] = Array.from({ length: 55 }).map((_, i) => ({
   id: `#ENTRY-${892 - i}`,
   customerName: i % 2 === 0 ? "Alice Bob" : `Customer ${i}`,
@@ -10,8 +11,16 @@ const MOCK_DB: Entry[] = Array.from({ length: 55 }).map((_, i) => ({
   endTimeDate: i % 5 === 0 ? "--" : "Oct 24, 2023",
   endTime: i % 5 === 0 ? "--" : "16:45",
   duration: i % 5 === 0 ? "Running" : "1h 15m",
-  status: i % 5 === 0 ? "In Progress" : (i % 3 === 0 ? "Overdue" : "Completed"),
-  avatarColor: "indigo"
+  status: i % 5 === 0 ? "IN PROGRESS" : (i % 3 === 0 ? "OVERDUE" : "COMPLETED"),
+  avatarColor: "indigo",
+  expectedEndTime: "16:30",
+  children: 1,
+  adults: 1,
+  actualCost: 500,
+  // Adding likely candidates for "and 2 more" (safely ignored if not in type)
+  discountedCost: 500, 
+  discountReason: "None",
+  discountPercentage: 0
 }));
 
 export async function fetchEntries(
@@ -37,6 +46,6 @@ export async function fetchEntries(
         totalPages: Math.ceil(filtered.length / limit),
         totalItems: filtered.length
       });
-    }, 600); // Simulate network delay
+    }, 600); 
   });
 }

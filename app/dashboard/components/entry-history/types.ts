@@ -24,3 +24,9 @@ export type Entry = {
   
   status: EntryStatus;
 };
+
+export interface APIResponse {
+  data: Entry[];
+  totalPages: number;
+  totalItems: number;
+}
