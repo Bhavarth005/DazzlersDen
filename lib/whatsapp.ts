@@ -21,17 +21,10 @@ export async function sendWelcomeMessage(name: string, mobile: string, qrUuid: s
             
             // 3. Map the Variables
             contentVariables: JSON.stringify({
-                '1': name,          // Replaces {{1}} in the body
-                '2': String(balance) // Replaces {{2}} in the body
-                // Note: For Media Headers, Twilio often handles the media mapping differently 
-                // depending on if you use the "Content API" or standard.
-                // If using the standard content API, you might need to pass the media separately
-                // or ensure your template configuration allows dynamic media.
+                '1': name,          
+                '2': String(balance) 
             }),
              
-            // IMPORTANT: For Media Templates, you often pass the media as a separate parameter
-            // or inside the content variables depending on your specific Twilio setup version.
-            // A common pattern for Media templates is:
             mediaUrl: [dynamicQrUrl] 
         });
 
@@ -46,8 +39,12 @@ export async function sendSessionStartMessage(name: string, mobile: string, cost
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            // Removed "Remaining Balance" line below
-            body: `*Session Started!* 🎢\n\nHi ${name}, enjoy your time at Dazzler's Den!\n\n👥 *Guests:* ${guests}\n *Balance Deducted:* Rs. ${cost}`
+            contentSid: 'HX823dbfb4506389f053925e1fdca274fa',
+            contentVariables: JSON.stringify({
+                '1': name,
+                '2': guests,
+                '3': String(cost)
+            })
         });
     } catch (error) {
         console.error("Failed to send Start WhatsApp:", error);
@@ -59,7 +56,11 @@ export async function sendSessionExitMessage(name: string, mobile: string, balan
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            body: `*Session Ended!*\n\nHello ${name},\n*Final Balance:* Rs. ${balance}\n\nThanks for visiting Dazzler's Den! 👋`
+            contentSid: 'HXfd7880b0e7f1ef2e1856c96fb0047941', 
+            contentVariables: JSON.stringify({
+                '1': name,
+                '2': String(balance)
+            })
         });
         console.log(`Exit WhatsApp sent to ${name}`);
     } catch (error) {
@@ -69,25 +70,23 @@ export async function sendSessionExitMessage(name: string, mobile: string, balan
 
 export async function sendRechargeMessage(name: string, mobile: string, amount: number, bonus: number, newBalance: number) {
     try {
-        let messageBody = `*Recharge Successful!* 💰\n\nHi ${name}, your wallet has been recharged with Rs. ${amount}.`;
-        
-        if (bonus > 0) {
-            messageBody += `\n🎉 *Bonus Added:* Rs. ${bonus}`;
-        }
-        
-        messageBody += `\n\n💰 *Current Balance:* Rs. ${newBalance}\nThank you for choosing Dazzler's Den!`;
-
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            body: messageBody
+            contentSid: 'HX894045f3714508fe42f560aeca394ae9', 
+            contentVariables: JSON.stringify({
+                '1': name,
+                '2': String(amount),
+                // LOGIC: If bonus is valid, show it. Otherwise show "0".
+                '3': (bonus && bonus > 0) ? String(bonus) : "0", 
+                '4': String(newBalance)
+            })
         });
         console.log(`Recharge WhatsApp sent to ${mobile}`);
     } catch (error) {
         console.error("Failed to send Recharge WhatsApp:", error);
     }
 }
-
 
 
 export async function sendBroadcastMessage(mobileNumber: string, messageBody: string) {
@@ -99,7 +98,10 @@ export async function sendBroadcastMessage(mobileNumber: string, messageBody: st
     await client.messages.create({
       from: whatsappNumber,
       to: `whatsapp:${formattedNumber}`,
-      body: messageBody
+      contentSid: 'HX4421a8a96b6ad4f197222b3657281628', 
+      contentVariables: JSON.stringify({
+        '1': messageBody 
+      })
     });
     
     return { success: true };
