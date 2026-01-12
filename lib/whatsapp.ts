@@ -16,16 +16,14 @@ export async function sendWelcomeMessage(name: string, mobile: string, qrUuid: s
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
             
-            // 2. Use the Template ID (Get this from Twilio Console after approval)
-            contentSid: 'HX698ca8d131db92f57bee8e902bf43d04', 
-            
-            // 3. Map the Variables
+            // Use your Content SID
+            contentSid: 'HXb730819516e4b0a1eb7f55befb2749fd', 
             contentVariables: JSON.stringify({
-                '1': name,          
-                '2': String(balance) 
-            }),
-             
-            mediaUrl: [dynamicQrUrl] 
+                '1': name,           
+                '2': String(balance) ,
+                '3': qrUuid
+            })
+            
         });
 
         console.log(`Welcome WhatsApp template sent to ${mobile}`);
@@ -56,7 +54,7 @@ export async function sendSessionExitMessage(name: string, mobile: string, balan
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HXfd7880b0e7f1ef2e1856c96fb0047941', 
+            contentSid: 'HXa802ec0cdda9f2357ab603eacc9a8d02', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': String(balance)
