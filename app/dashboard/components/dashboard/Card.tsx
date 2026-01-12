@@ -15,6 +15,12 @@ const accentColorMapping = {
     "red": "bg-red-50 text-red-600"
 }
 
+const accentTextColorMapping = {
+    "blue": "text-primary",
+    "green": "text-green-700",
+    "red": "text-red-600"
+}
+
 export default function DashboardCard({ title, mainText, cardIcon: CardIcon, subtextIcon: SubtextIcon, subtext, accentColor = "blue" } : DashboardCardProps) {
     return <div
           className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 dark:border-slate-700 flex flex-col justify-between h-34 relative overflow-hidden group">
@@ -33,8 +39,8 @@ export default function DashboardCard({ title, mainText, cardIcon: CardIcon, sub
         </div>
             
         {SubtextIcon &&
-            <div className="flex items-center gap-1 text-xs font-medium text-emerald-600 my-2 z-10">
-                <SubtextIcon className="text-sm" />
+            <div className={`flex items-center gap-2 text-xs font-medium ${accentTextColorMapping[accentColor]} my-2 z-10`}>
+                <SubtextIcon className="text-sm" size={20} />
                 <span>{subtext}</span>
             </div>
         }
