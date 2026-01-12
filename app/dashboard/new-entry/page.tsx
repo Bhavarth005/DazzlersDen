@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { X, Loader2, Search, AlertCircle, Sparkles } from "lucide-react";
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { toast } from "sonner";
-import { log } from "console";
+
+const ONE_HR_PRICE = 500;
+const TWO_HR_PRICE = 700;
+const ADULT_PRICE = 100;
 
 // Types
 type Customer = {
@@ -49,8 +52,8 @@ export default function NewEntry() {
   const [discountReason, setDiscountReason] = useState("");
 
   // --- Calculation Logic for Session ---
-  const kidPrice = selectedPlan === "1hr" ? 500 : 700;
-  const adultPrice = 100;
+  const kidPrice = selectedPlan === "1hr" ? ONE_HR_PRICE : TWO_HR_PRICE;
+  const adultPrice = ADULT_PRICE;
 
   const numKids = parseInt(kidsCount) || 0;
   const numAdults = parseInt(adultsCount) || 0;
@@ -386,7 +389,7 @@ export default function NewEntry() {
                     className="p-4 rounded-xl border-2 border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 peer-checked:border-primary peer-checked:bg-primary/5 transition-all h-full flex flex-col gap-2 hover:border-primary/50">
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">1 Hour</p>
-                      <p className="text-sm text-slate-500 font-medium">₹500</p>
+                      <p className="text-sm text-slate-500 font-medium">₹{ONE_HR_PRICE}</p>
                     </div>
                   </div>
                 </label>
@@ -403,7 +406,7 @@ export default function NewEntry() {
                     className="p-4 rounded-xl border-2 border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 peer-checked:border-primary peer-checked:bg-primary/5 transition-all h-full flex flex-col gap-2 hover:border-primary/50">
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">2 Hours</p>
-                      <p className="text-sm text-slate-500 font-medium">₹700</p>
+                      <p className="text-sm text-slate-500 font-medium">₹{TWO_HR_PRICE}</p>
                     </div>
                   </div>
                 </label>
