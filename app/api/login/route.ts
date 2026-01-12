@@ -26,9 +26,13 @@ export async function POST(req: Request) {
       httpOnly: true,
       sameSite: 'strict',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 12, // 12 Hours
     })
-    cookieStore.set("user_role", admin.role);
+    cookieStore.set("user_role", admin.role, {
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 60 * 60 * 12, // 12 Hours
+    });
 
     return NextResponse.json({ access_token: token, token_type: "bearer" });
     
