@@ -49,7 +49,7 @@ export default function CustomerManagement() {
 
   // -- STATE --
   const [searchTerm, setSearchTerm] = useState('');
-  const [pageSize, setPageSize] = useState(5);
+  const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -414,7 +414,7 @@ export default function CustomerManagement() {
               <div className="flex items-center gap-2">
                 <span>Rows per page:</span>
                 <select value={pageSize} onChange={handlePageSizeChange} className="h-8 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-md px-2">
-                  <option value={5}>5</option>
+                  <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>

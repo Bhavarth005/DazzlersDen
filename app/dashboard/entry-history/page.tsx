@@ -377,7 +377,6 @@ export default function EntryHistory() {
                   onChange={handlePageSizeChange}
                   className="h-8 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-md px-2 py-0 focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer"
                 >
-                  <option value={5}>5</option>
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>

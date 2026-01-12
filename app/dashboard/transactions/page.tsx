@@ -523,9 +523,9 @@ export default function Transactions() {
                 onChange={handlePageSizeChange}
                 className="border rounded bg-white dark:bg-slate-800 p-1"
               >
-                <option value={5}>5</option>
                 <option value={10}>10</option>
                 <option value={20}>20</option>
+                <option value={50}>50</option>
               </select>
             </div>
             <span>Showing {currentPage} of {totalPages || 1} pages</span>
