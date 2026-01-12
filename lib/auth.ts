@@ -19,7 +19,7 @@ export const verifyPassword = async (plain: string, hashed: string) => {
 
 export const createToken = (username: string) => {
   // Use the exported SECRET_KEY here
-  return jwt.sign({ sub: username }, SECRET_KEY, { expiresIn: '300m' });
+  return jwt.sign({ sub: username }, SECRET_KEY, { expiresIn: '720m' }); //  12 hrs = 720m
 };
 
 export async function getCurrentAdmin(request: Request) {
