@@ -2,7 +2,7 @@
 
 import ActiveSessions, { ActiveSession } from "./components/dashboard/ActiveSessions";
 import DashboardCard from "./components/dashboard/Card";
-import { Timer, TrendingUp, IndianRupee, TriangleAlert, Loader2 } from "lucide-react"
+import { Timer, TrendingUp, IndianRupee, TriangleAlert, Loader2, Contrast, User } from "lucide-react"
 import OverdueSessions, { OverdueSession } from "./components/dashboard/OverdueSessions";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
@@ -114,7 +114,7 @@ export default function Dashboard() {
           mainText={`${stats.activeCount}`}
           cardIcon={Timer} 
           subtext="Current customers" 
-          subtextIcon={TrendingUp} />
+          subtextIcon={User} />
 
         <DashboardCard 
           title="Monthly Revenue" 
