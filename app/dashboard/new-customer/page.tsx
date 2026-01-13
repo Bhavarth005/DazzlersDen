@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation'; // For redirection if unauthorized
 import { toast } from 'sonner';
+import { Stars } from 'lucide-react';
 
 export default function NewCustomer() {
   const router = useRouter();
@@ -16,6 +17,9 @@ export default function NewCustomer() {
     paymentType: '',
     initialBalance: ''
   });
+
+  const [offers, setOffers] = useState([{id: 0, triggerAmount: 0, bonusAmount: 0, description: '', isActive: false}]);
+  const [bonus, setBonus] = useState(0);
 
   // 2. Handle Input Changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -90,6 +94,31 @@ export default function NewCustomer() {
       setIsLoading(false);
     }
   };
+
+  const fetchOffers = async () => {
+    const res = await fetch("/api/admin/offers");
+
+    if (!res.ok) {
+      toast.error("Failed to fetch offers!")
+    } else {
+      const json = await res.json();
+      console.log(json);
+      setOffers(json);
+    }
+  }
+
+  useEffect(() => {
+    fetchOffers();
+  }, [])
+
+  useEffect(() => {
+    setBonus(0);
+    for(let offer of offers) {
+      if(offer.triggerAmount == parseInt(formData.initialBalance)) {
+        setBonus(offer.bonusAmount);
+      }
+    }
+  }, [formData]);
 
   return (
     <div className="w-full mx-auto max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-slate-200 dark:border-gray-700 flex flex-col animate-fade-in-up">
@@ -171,6 +200,17 @@ export default function NewCustomer() {
                   type="number"
                   min="0"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 mt-2">
+                {bonus > 0 
+                ? <>
+                    <Stars className="text-emerald-700" size={16} />
+                    <span className="font-medium text-md text-emerald-700">₹200 bonus applicable</span>
+                  </>
+                :
+                  <span className="font-medium text-md text-gray-500">No bonus applicable</span>
+                }
               </div>
             </div>
 
