@@ -280,7 +280,8 @@ export default function CustomerManagement() {
 
   const handleSendQr = async (id: string) => {
     const token = localStorage.getItem("access_token");
-    const res = await fetch(`/api/customer/${id}/resend-qr`, {
+    const res = await fetch(`/api/customers/${id}/resend-qr`, {
+      method: 'POST',
       headers: {'Authorization': `Bearer ${token}`}
     })
 

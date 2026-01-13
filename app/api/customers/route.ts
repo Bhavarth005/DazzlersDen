@@ -22,7 +22,8 @@ export async function GET(req: Request) {
   try {
     await getCurrentAdmin(req); 
     const { searchParams } = new URL(req.url);
-    const search = searchParams.get('search') || "";
+    const rawSearch = searchParams.get('search') || "";
+    const search = rawSearch.trim(); // Trim spaces
     const format = searchParams.get('format') || 'json';
     const customerIdsParam = searchParams.get('customer_id');
 
@@ -36,15 +37,19 @@ export async function GET(req: Request) {
         }
     }
 
-    // 2. Search Filter
     if (search) {
-      const isNumber = !isNaN(Number(search));
+      const searchAsNumber = Number(search);
+      const isNumber = !isNaN(searchAsNumber);
+      
       whereClause.OR = [
-        { name: { contains: search } }, 
+        { name: { contains: search, mode: 'insensitive' } },
         { mobileNumber: { contains: search } }, 
       ];
+
       if (isNumber) {
-        whereClause.OR.push({ id: parseInt(search) });
+        if (searchAsNumber < 2147483647) {
+            whereClause.OR.push({ id: searchAsNumber });
+        }
       }
     }
 
@@ -110,7 +115,6 @@ export async function POST(req: Request) {
     const body = customerCreateSchema.parse(rawBody);
     
     // Extract paymentMode directly from rawBody (Defaults to CASH)
-    // We do this here so it works even if you haven't updated the Zod schema file yet
     const paymentMode = (rawBody as any).paymentMode || "CASH";
     
     // 1. Check duplicate mobile
@@ -154,7 +158,7 @@ export async function POST(req: Request) {
             adminId: admin.id,
             transactionType: "RECHARGE",
             amount: initialAmount,
-            paymentMode: paymentMode // <--- NOW DYNAMIC
+            paymentMode: paymentMode 
           }
         });
 
@@ -174,7 +178,6 @@ export async function POST(req: Request) {
     });
 
     // 4. Send WhatsApp
-    // Note: Ensure 'qrCodeUuid' exists on your Prisma model, otherwise this might be undefined
     await sendWelcomeMessage(
         result.name, 
         result.mobileNumber, 

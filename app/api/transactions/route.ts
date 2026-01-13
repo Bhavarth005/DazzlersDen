@@ -48,7 +48,7 @@ export async function GET(req: Request) {
     
     if (customerName) {
         whereClause.customer = {
-            name: { contains: customerName }
+            name: { contains: customerName, mode: 'insensitive'}
         };
     }
 

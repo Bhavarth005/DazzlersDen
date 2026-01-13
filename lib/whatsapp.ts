@@ -9,9 +9,6 @@ const client = twilio(accountSid, authToken);
 
 export async function sendWelcomeMessage(name: string, mobile: string, qrUuid: string, balance: number) {
     try {
-        // 1. Generate the Dynamic Link
-        const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrUuid}`;
-
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
@@ -107,4 +104,30 @@ export async function sendBroadcastMessage(mobileNumber: string, messageBody: st
     console.error(`Failed to send to ${mobileNumber}:`, error);
     return { success: false, error };
   }
+}
+
+export async function resendQRCodeMessage(name: string, mobile: string, qrUuid: string) {
+    try {
+        const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrUuid}`;
+
+        await client.messages.create({
+            from: whatsappNumber,
+            to: `whatsapp:+91${mobile}`,
+            
+            contentSid: 'HX4af174c452bf514bc93411a5c124d652', 
+            
+           
+            contentVariables: JSON.stringify({
+                '1': name,
+                '2': dynamicQrUrl
+            })
+        });
+
+        console.log(`Resend QR WhatsApp sent to ${mobile}`);
+        return { success: true };
+
+    } catch (error) {
+        console.error("Failed to resend QR WhatsApp:", error);
+        return { success: false, error };
+    }
 }
