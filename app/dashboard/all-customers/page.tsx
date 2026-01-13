@@ -280,23 +280,25 @@ export default function CustomerManagement() {
           {/* HEADER SECTION */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 min-h-12.5">
             {selection.selectedIds.length > 0 ? (
-              <div className="flex flex-col lg:flex-row items-start lg:items-center gap-4 justify-between  w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2 animate-in fade-in">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3 p-2 text-lg">
-                  <span className="font-semibold text-slate-700 dark:text-blue-100">
-                    {selection.selectedIds.length} Selected
-                  </span>
+              <div className="flex flex-row items-center gap-4 justify-between  w-full bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-2 animate-in fade-in">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-3 p-2 ml-2 text-lg">
+                    <span className="font-semibold text-slate-700 dark:text-blue-100">
+                      {selection.selectedIds.length} Selected
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-row items-center gap-3 w-auto">
+                  <button onClick={() => selection.setSelectedIds([])} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 text-slate-600 dark:text-slate-300 hover:bg-white/50 text-sm font-bold rounded-md  transition-colors">
+                    <span className="material-symbols-outlined text-[18px]">close</span>
+                    <span className="hidden lg:flex">Cancel</span>
+                  </button>
+                  <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
+                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <span className="hidden lg:flex">Delete</span>
+                  </button>
                 </div>
               </div>
-              <div className="flex flex-col lg:flex-row items-center gap-3 w-full lg:w-auto">
-                <button onClick={() => selection.setSelectedIds([])} className="flex w-full items-center gap-2 p-3 text-slate-600 dark:text-slate-300 hover:bg-white/50 text-sm font-medium rounded-md  transition-colors">
-                  <span className="material-symbols-outlined text-[18px]">close</span>Cancel
-                </button>
-                <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-3 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md shadow-sm transition-colors">
-                  <span className="material-symbols-outlined text-[18px]">delete</span> Delete
-                </button>
-              </div>
-            </div>
             ) : (
               // Standard Header
               <div className="flex flex-col md:flex-row w-full items-start lg:items-center gap-4 justify-between">
