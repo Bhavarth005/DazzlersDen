@@ -206,7 +206,7 @@ export default function NewCustomer() {
                 {bonus > 0 
                 ? <>
                     <Stars className="text-emerald-700" size={16} />
-                    <span className="font-medium text-md text-emerald-700">₹200 bonus applicable</span>
+                    <span className="font-medium text-md text-emerald-700">₹{bonus} bonus applicable</span>
                   </>
                 :
                   <span className="font-medium text-md text-gray-500">No bonus applicable</span>
