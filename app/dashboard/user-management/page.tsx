@@ -50,13 +50,7 @@ export default function UserManagement() {
     const fetchUsers = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem("access_token");
-            const res = await fetch('/api/admin', {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-type': 'application/json'
-                }
-            });
+            const res = await fetch('/api/admin', { headers: { 'Content-type': 'application/json' } });
             if (res.ok) {
                 const data = await res.json();
                 setUsers(data);
@@ -84,10 +78,9 @@ export default function UserManagement() {
         setIsSubmitting(true);
         
         try {
-            const token = localStorage.getItem("access_token");
             const res = await fetch('/api/admin/register', {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
             
@@ -125,13 +118,9 @@ export default function UserManagement() {
         setIsDeleting(true);
 
         try {
-            const token = localStorage.getItem("access_token");
             const res = await fetch(`/api/admin/${userToDelete.id}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-type': 'application/json'
-                }
+                headers: { 'Content-type': 'application/json' }
             });
 
             const data = await res.json();

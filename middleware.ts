@@ -30,7 +30,7 @@ export function middleware(request: NextRequest) {
   }
 
   // 5. SCENARIO C: Root Path Handling
-  // If user hits localhost:3000/, decide where to send them
+  // If user hits /, decide where to send them
   if (isRootRoute) {
     if (token) {
       return NextResponse.redirect(new URL('/dashboard', request.url))

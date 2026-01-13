@@ -22,12 +22,10 @@ export default function Sidebar({ userRole }: { userRole?: string} ) {
         const data = await res.json();
             
         if (res.ok) { // Check res.ok instead of relying just on message string
-            localStorage.removeItem("access_token");
             toast.info("Logged out successfully");
-            
             setTimeout(() => {
                 router.refresh(); 
-            }, 1000);
+            }, 100);
         }
     }
 

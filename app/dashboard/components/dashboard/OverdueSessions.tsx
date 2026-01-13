@@ -23,11 +23,7 @@ function OverdueExitButton({ sessionId, refreshData, fullWidth }: { sessionId: n
     const handleConfirmExit = async () => {
         setIsLoading(true);
         try {
-            const token = localStorage.getItem('access_token');
-            const res = await fetch(`/api/sessions/${sessionId}/exit`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const res = await fetch(`/api/sessions/${sessionId}/exit`, { method: 'POST', });
 
             if (res.ok) {
                 toast.success("Exit marked successfully");

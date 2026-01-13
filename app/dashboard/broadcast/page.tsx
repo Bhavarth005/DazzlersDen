@@ -47,19 +47,9 @@ export default function BroadcastPage() {
         setIsSending(true);
 
         try {
-            const token = localStorage.getItem("access_token"); 
-
-            if (!token) {
-                alert("You are not logged in! Please login again.");
-                window.location.href = "/login"; // Redirect if needed
-                return;
-            }
             const response = await fetch('/api/broadcast', {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
-                },
+                headers: { 'Content-Type': 'application/json', },
                 body: JSON.stringify({ message }),
             });
 

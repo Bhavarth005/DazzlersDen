@@ -30,12 +30,7 @@ export default function Dashboard() {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const token = localStorage.getItem('access_token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-
-      // CHANGE: Single fetch instead of Promise.all
-      // Ensure '/api/dashboard' matches your actual unified endpoint URL
-      const response = await fetch('/api/dashboard', { headers });
+      const response = await fetch('/api/dashboard', { credentials: 'include' });
 
       if (!response.ok) {
         throw new Error("Failed to fetch dashboard data");

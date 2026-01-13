@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const token = createToken(admin.username);
 
-    const cookieStore = await cookies()
+    const cookieStore = await cookies();
     cookieStore.set('Authorization', `Bearer ${token}`, {
       httpOnly: true,
       sameSite: 'strict',
@@ -34,9 +34,10 @@ export async function POST(req: Request) {
       maxAge: 60 * 60 * 12, // 12 Hours
     });
 
-    return NextResponse.json({ access_token: token, token_type: "bearer" });
+    return NextResponse.json({ status: "success" });
     
   } catch (e) {
+    console.log(e);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

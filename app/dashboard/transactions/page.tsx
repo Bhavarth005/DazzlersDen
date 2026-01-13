@@ -64,8 +64,6 @@ export default function Transactions() {
 
   const loadData = async () => {
     setIsLoading(true);
-    const token = localStorage.getItem('access_token');
-    if (!token) { router.push('/auth/login'); return; }
 
     try {
       const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
@@ -88,12 +86,8 @@ export default function Transactions() {
 
       // 4. Execute Parallel Requests
       const [listRes, statsRes] = await Promise.all([
-        fetch(`/api/transactions?${listParams.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        }),
-        fetch(`/api/transactions?${statsParams.toString()}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch(`/api/transactions?${listParams.toString()}`),
+        fetch(`/api/transactions?${statsParams.toString()}`)
       ]);
 
       if (listRes.status === 401 || statsRes.status === 401) {
@@ -154,16 +148,12 @@ export default function Transactions() {
         start_date: start,
         end_date: end
       });
-      const token = localStorage.getItem("access_token");
       const url = `/api/transactions?${params.toString()}`;
 
       // 1. Fetch the data with the Header
       const response = await fetch(url, {
         method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`, // Header is now possible
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
 
       if (!response.ok) throw new Error("Export failed");
@@ -210,15 +200,11 @@ export default function Transactions() {
     if (!confirm(`Are you sure you want to delete ${count} transaction(s)? This will affect your Income Stats.`)) return;
 
     setIsLoading(true);
-    const token = localStorage.getItem('access_token');
 
     try {
       // 2. Map selected IDs to Fetch Promises
       const deletePromises = selection.selectedIds.map(id =>
-        fetch(`/api/transactions/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch(`/api/transactions/${id}`, { method: 'DELETE', })
       );
 
       // 3. Execute all requests in parallel

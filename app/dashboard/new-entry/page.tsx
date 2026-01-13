@@ -85,13 +85,8 @@ export default function NewEntry() {
   useEffect(() => {
     const fetchOffers = async () => {
       try {
-        const token = localStorage.getItem('access_token');
-
         const res = await fetch('/api/admin/offers', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Content-Type': 'application/json' }
         });
         if (res.ok) {
           const data = await res.json();
@@ -110,13 +105,8 @@ export default function NewEntry() {
     if (!query) return;
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-
       const res = await fetch(`/api/customers?search=${query}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
       if (res.ok) {
         const data = await res.json();
@@ -142,11 +132,8 @@ export default function NewEntry() {
     if (!uuid) return;
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
-
       const res = await fetch(`/api/customers/by-uuid/?uuid=${uuid}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -179,12 +166,10 @@ export default function NewEntry() {
 
     setIsRecharging(true);
     try {
-      const token = localStorage.getItem('access_token');
       const amount = parseFloat(inputBalance);
       const res = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 
-          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json' 
         },
         body: JSON.stringify({
@@ -225,12 +210,11 @@ export default function NewEntry() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('access_token');
       const duration = selectedPlan === "1hr" ? 1 : 2;
 
       const res = await fetch('/api/sessions/start', {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           qr_code_uuid: customer.qrCodeUuid,
           children: numKids,

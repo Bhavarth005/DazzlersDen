@@ -60,8 +60,7 @@ export default function EntryHistory() {
   // --- API CALL: Load Sessions ---
   const loadData = async () => {
     setIsLoading(true);
-    const token = localStorage.getItem('access_token');
-
+    
     try {
       // 1. Calculate Date Range
       const { start, end } = getDateRange(dateFilter, customDates.start, customDates.end);
@@ -78,9 +77,7 @@ export default function EntryHistory() {
 
       // 3. Fetch
       // We point to /api/sessions because "Entries" are essentially "Sessions"
-      const res = await fetch(`/api/sessions?${params.toString()}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await fetch(`/api/sessions?${params.toString()}`);
 
       if (res.status === 401) { router.push('/auth/login'); return; }
       if (!res.ok) throw new Error("Failed to fetch entries");
@@ -157,16 +154,12 @@ export default function EntryHistory() {
           start_date: start,
           end_date: end
         });
-        const token = localStorage.getItem("access_token");
         const url = `/api/export/sessions?${params.toString()}`;
 
         // 1. Fetch the data with the Header
         const response = await fetch(url, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`, // Header is now possible
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json', },
         });
 
         if (!response.ok) throw new Error("Export failed");

@@ -17,12 +17,8 @@ export default function BonusConfiguration() {
 
   const fetchOffers = async () => {
     try {
-      const token = localStorage.getItem('access_token');
       const res = await fetch('/api/admin/offers', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (res.ok) {
@@ -66,15 +62,8 @@ export default function BonusConfiguration() {
     if (!window.confirm("Are you sure you want to delete this offer?")) return;
 
     try {
-        const token = localStorage.getItem('access_token');
-        
         // We assume the backend accepts DELETE requests with an ID query param
-        const res = await fetch(`/api/admin/offers?id=${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-            }
-        });
+        const res = await fetch(`/api/admin/offers?id=${id}`, { method: 'DELETE', });
 
         if (res.ok) {
             setRows(rows.filter(row => row.id !== id));
@@ -99,7 +88,6 @@ export default function BonusConfiguration() {
   // 4. Save Logic (POST/PUT)
   const handleSave = async () => {
     setIsLoading(true);
-    const token = localStorage.getItem('access_token');
 
     try {
       const savePromises = rows.map(async (row) => {
@@ -117,10 +105,7 @@ export default function BonusConfiguration() {
 
         const res = await fetch('/api/admin/offers', {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
 

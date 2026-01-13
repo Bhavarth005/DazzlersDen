@@ -36,8 +36,6 @@ export default function NewCustomer() {
     setIsLoading(true);
 
     try {
-      const token = localStorage.getItem('access_token');
-
       // --- DATA MAPPING ---
       // We must match the Zod Schema in src/lib/schemas.ts
       const payload: any = {
@@ -56,10 +54,7 @@ export default function NewCustomer() {
       // --- API CALL ---
       const response = await fetch('/api/customers', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
+        headers: { 'Content-Type': 'application/json', },
         body: JSON.stringify(payload)
       });
 

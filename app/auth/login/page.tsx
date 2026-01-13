@@ -17,30 +17,23 @@ export default function LoginPage() {
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // Ensure httponly cookie set by the server is included
+        headers: { 'Content-Type': 'application/json', },
         credentials: 'include',
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
         const data = await response.json();
-        // Persist token for client-side usage (server also sets httponly cookie)
-        if (data.access_token) {
-          try {
-            localStorage.setItem('access_token', data.access_token);
-          } catch (err) {
-            console.warn('Unable to write to localStorage', err);
-          }
+
+        if (data.status == "success") {
+          toast.success('Signed in');
+          router.refresh();
+          router.push('/dashboard');
+        } else {
+          toast.error("Login failed!");
         }
 
-        toast.success('Signed in');
-        router.refresh();
-        router.push('/dashboard');
       } else {
-        // Try to parse error message
         let errMsg = 'Invalid Credentials';
         try {
           const errJson = await response.json();

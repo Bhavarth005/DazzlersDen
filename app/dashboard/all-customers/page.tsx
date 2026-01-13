@@ -11,19 +11,13 @@ import { useSelection } from '../components/customers/useSelection';
 import { toast } from 'sonner';
 
 async function fetchAllCustomers(searchTerm: string): Promise<Customer[]> {
-  const token = localStorage.getItem('access_token');
-  if (!token) throw new Error("No token found");
-
   // Only pass search param, no limit/skip
   const params = new URLSearchParams();
   if (searchTerm) params.append('search', searchTerm);
 
   const res = await fetch(`/api/customers?${params.toString()}`, {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' }
   });
 
   if (res.status === 401) throw new Error("Unauthorized");
@@ -140,7 +134,6 @@ export default function CustomerManagement() {
   };
 
   const confirmDelete = async () => {
-    const token = localStorage.getItem('access_token');
     // Determine which IDs to delete (Single ID vs Selected Array)
     const idsToDelete = customerToDelete ? [customerToDelete] : selection.selectedIds;
 
@@ -156,10 +149,7 @@ export default function CustomerManagement() {
       // 2. Loop and Delete
       // We use Promise.all to run them in parallel (faster than one by one)
       const deletePromises = idsToDelete.map(id =>
-        fetch(`/api/customers/${id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
+        fetch(`/api/customers/${id}`, { method: 'DELETE' })
       );
 
       const results = await Promise.all(deletePromises);
@@ -188,15 +178,11 @@ export default function CustomerManagement() {
           search: searchTerm,
           customer_id: selection.selectedIds.join(",")
         });
-        const token = localStorage.getItem("access_token");
         const url = `/api/customers?${params.toString()}`;
 
         const response = await fetch(url, {
             method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${token}`, // Header is now possible
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json', },
         });
 
         if (!response.ok) throw new Error("Export failed");
@@ -236,8 +222,6 @@ export default function CustomerManagement() {
   };
 
   const handleSaveCustomer = async (updatedCustomer: Customer) => {
-    const token = localStorage.getItem('access_token');
-
     // 1. Optimistic UI Update (Update screen immediately before API returns)
     // This makes the app feel instant. If API fails, we revert (handle in catch).
     setAllCustomers(prev => prev.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
@@ -256,10 +240,7 @@ export default function CustomerManagement() {
       // 3. API Call
       const res = await fetch(`/api/customers/${updatedCustomer.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
@@ -279,11 +260,7 @@ export default function CustomerManagement() {
   };
 
   const handleSendQr = async (id: string) => {
-    const token = localStorage.getItem("access_token");
-    const res = await fetch(`/api/customers/${id}/resend-qr`, {
-      method: 'POST',
-      headers: {'Authorization': `Bearer ${token}`}
-    })
+    const res = await fetch(`/api/customers/${id}/resend-qr`, { method: 'POST', })
 
     if(!res.ok) {
       toast.error("Failed to send QR code!");

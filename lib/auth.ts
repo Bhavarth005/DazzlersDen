@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { prisma } from './prisma';
 import bcrypt from 'bcryptjs';
+import { cookies } from 'next/headers';
 
 // 1. Read from environment (give it a temporary name)
 const envSecret = process.env.SECRET_KEY;
@@ -23,7 +24,8 @@ export const createToken = (username: string) => {
 };
 
 export async function getCurrentAdmin(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  const cookieStore = await cookies();
+  const authHeader = cookieStore.get("Authorization")?.value;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     throw new Error("Unauthorized");
   }
