@@ -34,6 +34,7 @@ export default function RootLayout({
         {children}
         <Toaster
           position="top-center"
+          swipeDirections={["right", "left"]}
           richColors
           closeButton />
       </body>
