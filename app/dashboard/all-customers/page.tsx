@@ -278,6 +278,19 @@ export default function CustomerManagement() {
     }
   };
 
+  const handleSendQr = async (id: string) => {
+    const token = localStorage.getItem("access_token");
+    const res = await fetch(`/api/customer/${id}/resend-qr`, {
+      headers: {'Authorization': `Bearer ${token}`}
+    })
+
+    if(!res.ok) {
+      toast.error("Failed to send QR code!");
+    } else {
+      toast.success("QR Code sent successfully!");
+    }
+  }
+
   return (
     <>
       <main className="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-8">
@@ -380,6 +393,7 @@ export default function CustomerManagement() {
                         onToggle={() => selection.toggleSelection(cust.id)}
                         onEdit={() => setEditingCustomer(cust)}
                         onDelete={() => handleSingleDeleteClick(cust.id)}
+                        onQrSend={() => handleSendQr(cust.id)}
                       />
                     ))
                   )}
@@ -403,6 +417,7 @@ export default function CustomerManagement() {
                   onToggle={() => selection.toggleSelection(cust.id)}
                   onEdit={() => setEditingCustomer(cust)}
                   onDelete={() => handleSingleDeleteClick(cust.id)}
+                  onQrSend={() => handleSendQr(cust.id)}
                 />
               ))
             )}

@@ -6,9 +6,10 @@ type Props = {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onQrSend: () => void;
 };
 
-export default function CustomerRow({ customer, isSelected, onToggle, onEdit, onDelete }: Props) {
+export default function CustomerRow({ customer, isSelected, onToggle, onEdit, onDelete, onQrSend }: Props) {
   return (
     <tr 
       onClick={onToggle}
@@ -57,6 +58,15 @@ export default function CustomerRow({ customer, isSelected, onToggle, onEdit, on
             className="flex items-center justify-center p-2 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onQrSend();
+            }}
+            className="flex items-center justify-center p-2 rounded-lg text-white bg-primary hover:bg-primary-hover transition-colors shadow-sm"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>qr_code</span>
           </button>
         </div>
       </td>

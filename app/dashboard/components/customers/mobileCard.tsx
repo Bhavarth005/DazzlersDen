@@ -6,9 +6,10 @@ type Props = {
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onQrSend: () => void;
 };
 
-export default function CustomerMobileCard({ customer, isSelected, onToggle, onEdit, onDelete }: Props) {
+export default function CustomerMobileCard({ customer, isSelected, onToggle, onEdit, onDelete, onQrSend }: Props) {
   return (
     <div 
       onClick={onToggle}
@@ -50,10 +51,10 @@ export default function CustomerMobileCard({ customer, isSelected, onToggle, onE
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="flex flex-col gap-3">
         <button 
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="flex items-center justify-center py-2 px-3 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-green-600 border border-transparent hover:border-green-600 transition-all"
+          className="flex items-center justify-start py-3 px-4 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-green-600 border border-transparent hover:border-green-600 transition-all"
         >
           <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>edit</span> Edit
         </button>
@@ -62,9 +63,18 @@ export default function CustomerMobileCard({ customer, isSelected, onToggle, onE
             e.stopPropagation();
             onDelete();
           }}
-          className="flex items-center justify-center py-2 px-3 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-red-600 border border-transparent hover:border-red-600 transition-all"
+          className="flex items-center justify-start py-3 px-4 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-red-600 border border-transparent hover:border-red-600 transition-all"
         >
           <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>delete</span> Delete
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onQrSend();
+          }}
+          className="flex items-center justify-start py-3 px-4 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-primary border border-transparent hover:border-primary-hover transition-all"
+        >
+          <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>qr_code</span>Resend QR Code
         </button>
       </div>
     </div>
