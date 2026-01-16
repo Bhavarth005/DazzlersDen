@@ -73,7 +73,10 @@ export default function UserManagement() {
         e.preventDefault();
         if (!formData.username || !formData.password) return;
 
-        console.log(formData)
+        if(formData.password.length < 8) {
+            alert("Password must be minimum 8 characters")
+            return;
+        }
 
         setIsSubmitting(true);
         
