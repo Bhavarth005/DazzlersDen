@@ -7,6 +7,8 @@ import { toast } from "sonner";
 
 const ONE_HR_PRICE = 500;
 const TWO_HR_PRICE = 700;
+const ONE_HR_NO_ADULT = 300;
+const TWO_HR_NO_ADULT = 600;
 const ADULT_PRICE = 100;
 
 // Types
@@ -51,16 +53,21 @@ export default function NewEntry() {
   const [discountPercent, setDiscountPercent] = useState("");
   const [discountReason, setDiscountReason] = useState("");
 
-  // --- Calculation Logic for Session ---
-  const kidPrice = selectedPlan === "1hr" ? ONE_HR_PRICE : TWO_HR_PRICE;
-  const adultPrice = ADULT_PRICE;
-
+  
   const numKids = parseInt(kidsCount) || 0;
   const numAdults = parseInt(adultsCount) || 0;
   const discPercent = parseFloat(discountPercent) || 0;
-
+  
+  // --- Pricing state ---
+  let oneHrPrice = numAdults == 0 ? ONE_HR_NO_ADULT : ONE_HR_PRICE;
+  let twoHrPrice = numAdults == 0 ? TWO_HR_NO_ADULT : TWO_HR_PRICE;
+  
+  // --- Calculation Logic for Session ---
+  const kidPrice = selectedPlan === "1hr" ? oneHrPrice : twoHrPrice;
+  const adultPrice = ADULT_PRICE;
+  
   // First 2 adults free
-  const chargeableAdults = Math.max(0, numAdults - 2);
+  const chargeableAdults = Math.max(0, numAdults - (numKids * 2));
 
   const totalKidsCost = numKids * kidPrice;
   const totalAdultsCost = chargeableAdults * adultPrice;
@@ -268,7 +275,7 @@ export default function NewEntry() {
               <div className="relative flex-1">
                 <input
                   type="text"
-                  placeholder="(ONLY FOR DEV) Mobile / Name / ID"
+                  placeholder="Mobile / Name / ID"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && searchCustomer(searchQuery)}
@@ -352,7 +359,7 @@ export default function NewEntry() {
                   placeholder="0" type="number" min="0" />
               </div>
               <p className="text-xs text-slate-500 text-right">
-                First 2 adults free, then ₹100/adult
+                2 adults per kid free, then ₹100/adult
               </p>
             </div>
 
@@ -373,7 +380,7 @@ export default function NewEntry() {
                     className="p-4 rounded-xl border-2 border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 peer-checked:border-primary peer-checked:bg-primary/5 transition-all h-full flex flex-col gap-2 hover:border-primary/50">
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">1 Hour</p>
-                      <p className="text-sm text-slate-500 font-medium">₹{ONE_HR_PRICE}</p>
+                      <p className="text-sm text-slate-500 font-medium">₹{oneHrPrice}</p>
                     </div>
                   </div>
                 </label>
@@ -390,7 +397,7 @@ export default function NewEntry() {
                     className="p-4 rounded-xl border-2 border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-800 peer-checked:border-primary peer-checked:bg-primary/5 transition-all h-full flex flex-col gap-2 hover:border-primary/50">
                     <div>
                       <p className="font-bold text-slate-900 dark:text-white">2 Hours</p>
-                      <p className="text-sm text-slate-500 font-medium">₹{TWO_HR_PRICE}</p>
+                      <p className="text-sm text-slate-500 font-medium">₹{twoHrPrice}</p>
                     </div>
                   </div>
                 </label>
