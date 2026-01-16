@@ -502,6 +502,10 @@ export default function Transactions() {
               onToggle={() => selection.toggleSelection(txn.id)}
             />
           ))}
+          {transactions.length == 0 
+            ? <div className="p-8 text-center text-slate-500">No records found</div>
+            : <></>
+          }
         </div>
 
         {/* --- PAGINATION FOOTER --- */}
