@@ -38,7 +38,7 @@ export default function Birthdays() {
         skip: skip.toString(),
         limit: pageSize.toString(),
         search: searchTerm,
-        month: (selectedMonthIndex + 1).toString() 
+        month: (selectedMonthIndex).toString() 
       });
 
       // Replace with your actual endpoint, e.g., /api/customers/birthdays
@@ -53,9 +53,9 @@ export default function Birthdays() {
         id: item.id,
         name: item.name,
         phoneNumber: item.mobileNumber,
-        birthDate: item.birthDate,
-        formattedBirthDate: new Date(item.birthDate).toLocaleString('en-IN', {
-            day: '2-digit', month: 'short'
+        birthDate: item.birthdate,
+        formattedBirthDate: new Date(item.birthdate).toLocaleString('en-IN', {
+          day: '2-digit', month: 'short'
         })
       }));
 
@@ -85,7 +85,7 @@ export default function Birthdays() {
       toast.info(`Sending birthday message`);
 
       // 2. Call Backend
-      const res = await fetch('/api/messages/send-birthday', {
+      const res = await fetch('/api/customers/birthdays', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customerId: id }), 
@@ -94,7 +94,7 @@ export default function Birthdays() {
       if (!res.ok) throw new Error("Failed to send message");
 
       // 3. Success Feedback
-      toast.success(`Message sent successfully to ${name}!`);
+      toast.success(`Message sent successfully!`);
       
     } catch (error) {
       console.error(error);
