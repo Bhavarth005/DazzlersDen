@@ -8,7 +8,10 @@ export const loginSchema = z.object({
 export const customerCreateSchema = z.object({
   name: z.string().min(2, "Name too short"),
   mobile_number: z.string().regex(/^\d{10}$/, "Mobile must be 10 digits"),
-  birthdate: z.string().datetime().or(z.string().date()), // ISO string
+  birthdate: z.preprocess(
+    (arg) => (typeof arg === 'string' && arg === '' ? null : arg), 
+    z.string().nullable().optional()
+  ), // ISO string
   initial_balance: z.number().nonnegative("Balance cannot be negative").optional(),
 });
 

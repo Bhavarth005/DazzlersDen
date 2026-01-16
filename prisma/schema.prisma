@@ -20,7 +20,7 @@ model Customer {
   id             Int           @id @default(autoincrement())
   qrCodeUuid     String        @unique @default(uuid()) // UUID generation
   name           String
-  birthdate      DateTime
+  birthdate      DateTime?
   mobileNumber   String        @unique
   currentBalance Float         @default(0.0)
   createdAt      DateTime      @default(now())

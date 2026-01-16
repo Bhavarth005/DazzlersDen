@@ -145,7 +145,9 @@ export async function POST(req: Request) {
         data: {
           name: body.name,
           mobileNumber: body.mobile_number,
-          birthdate: new Date(body.birthdate),
+          birthdate: (body.birthdate && body.birthdate.length > 0) 
+            ? new Date(body.birthdate) 
+            : null,
           currentBalance: totalStartingBalance, 
         }
       });

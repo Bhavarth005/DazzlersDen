@@ -131,3 +131,22 @@ export async function resendQRCodeMessage(name: string, mobile: string, qrUuid: 
         return { success: false, error };
     }
 }
+
+export async function sendBirthdayMessage(name: string, mobile: string) {
+    try {
+
+        await client.messages.create({
+            from: whatsappNumber,
+            to: `whatsapp:+91${mobile}`,
+            contentSid: 'HX2a8c033c8d7254271c8fc47237d9b34d',
+            contentVariables: JSON.stringify({
+                '1': name
+            })
+        });
+        console.log(`Birthday WhatsApp sent to ${mobile}`);
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to send Birthday WhatsApp:", error);
+        return { success: false, error };
+    }
+}
