@@ -293,6 +293,10 @@ export default function CustomerManagement() {
                     <span className="material-symbols-outlined text-[18px]">close</span>
                     <span className="hidden lg:flex">Cancel</span>
                   </button>
+                  <button onClick={togglePageSelection} className="flex lg:hidden w-full items-center gap-2 p-4 lg:py-2 lg:px-4 text-slate-600 dark:text-slate-300 hover:bg-white/50 text-sm font-bold rounded-md  transition-colors">
+                    <span className="material-symbols-outlined text-[18px]">select_all</span>
+                    <span className="hidden lg:flex">Select All</span>
+                  </button>
                   <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                     <span className="hidden lg:flex">Delete</span>
