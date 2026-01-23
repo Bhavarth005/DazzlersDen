@@ -58,8 +58,14 @@ export async function GET(req: Request) {
     
     if (startDate || endDate) {
         whereClause.date = {};
-        if (startDate) whereClause.date.gte = new Date(startDate);
-        if (endDate) whereClause.date.lte = new Date(endDate);
+        if (startDate) {
+            whereClause.date.gte = new Date(startDate);
+        }
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            whereClause.date.lte = end;
+        }
     }
 
     // --- FEATURE 1: TRANSACTION STATS (Restored) ---

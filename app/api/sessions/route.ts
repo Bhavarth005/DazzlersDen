@@ -42,9 +42,17 @@ export async function GET(req: Request) {
     const whereClause: any = {};
 
     if (startDate || endDate) {
-      whereClause.startTime = {};
-      if (startDate) whereClause.startTime.gte = new Date(startDate);
-      if (endDate) whereClause.startTime.lte = new Date(endDate);
+      whereClause.startTime = {}; 
+      
+      if (startDate) {
+        whereClause.startTime.gte = new Date(startDate);
+      }
+      
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        whereClause.startTime.lte = end;
+      }
     }
 
     if (search) {
