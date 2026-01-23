@@ -154,7 +154,7 @@ export default function EntryHistory() {
           start_date: start,
           end_date: end
         });
-        const url = `/api/export/sessions?${params.toString()}`;
+        const url = `/api/sessions?${params.toString()}`;
 
         // 1. Fetch the data with the Header
         const response = await fetch(url, {
