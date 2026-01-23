@@ -7,6 +7,7 @@ import {
   ReceiptIndianRupee,
   Gift,
   Megaphone,
+  Cake,
 } from "lucide-react";
 
 export const sidebarLinks = [
@@ -40,6 +41,11 @@ export const sidebarLinks = [
     title: "Entry History",
     href: "/dashboard/entry-history",
     icon: HistoryIcon,
+  },
+  {
+    title: "Birthdays",
+    href: "/dashboard/birthdays",
+    icon: Cake,
   },
   {
     title: "Broadcast",
