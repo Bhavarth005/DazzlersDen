@@ -70,3 +70,13 @@ model RechargeOffer {
   description   String?  // e.g. "Diwali Dhamaka Offer"
   isActive      Boolean  @default(true)
 }
+
+model PricingPlan {
+  id             Int     @id @default(autoincrement())
+  name           String  // "1 Hr Standard", "Extra Adult"
+  price          Int     // 300, 100
+  durationHr     Float   @default(0) // 1.0, 2.0 (Keep 0 for Addons)
+  includedAdults Int     @default(0) // 0 or 2
+  type           String  @default("PLAN") // Values: "PLAN" or "ADDON"
+  isActive       Boolean @default(true)
+}
