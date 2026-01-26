@@ -5,11 +5,8 @@ import { X, Loader2, Search, AlertCircle, Sparkles } from "lucide-react";
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { toast } from "sonner";
 
-const ONE_HR_PRICE = 500;
-const TWO_HR_PRICE = 700;
-const ONE_HR_NO_ADULT = 300;
-const TWO_HR_NO_ADULT = 600;
-const ADULT_PRICE = 100;
+// Removed hardcoded constants
+// const ONE_HR_PRICE = 500...
 
 // Types
 type Customer = {
@@ -29,10 +26,31 @@ type Offer = {
   isActive: boolean;
 };
 
+// New Type for Pricing State
+type PricingConfig = {
+  oneHrStandard: number; // No adults
+  oneHrFamily: number;   // With adults
+  twoHrStandard: number;
+  twoHrFamily: number;
+  extraAdult: number;
+  isLoaded: boolean;
+};
+
 export default function NewEntry() {
   // --- Data State ---
   const [customer, setCustomer] = useState<Customer | null>(null);
-  const [offers, setOffers] = useState<Offer[]>([]); // Store offers here
+  const [offers, setOffers] = useState<Offer[]>([]);
+  
+  // New Pricing State (Default to 0 until loaded)
+  const [pricing, setPricing] = useState<PricingConfig>({
+    oneHrStandard: 0,
+    oneHrFamily: 0,
+    twoHrStandard: 0,
+    twoHrFamily: 0,
+    extraAdult: 0,
+    isLoaded: false
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -53,20 +71,60 @@ export default function NewEntry() {
   const [discountPercent, setDiscountPercent] = useState("");
   const [discountReason, setDiscountReason] = useState("");
 
-  
+  // --- Effects: Fetch Data ---
+  useEffect(() => {
+    const fetchConfiguration = async () => {
+      try {
+        // Run both fetches in parallel
+        const [offersRes, pricingRes] = await Promise.all([
+          fetch('/api/admin/offers'),
+          fetch('/api/pricing')
+        ]);
+
+        if (offersRes.ok) {
+          const data = await offersRes.json();
+          setOffers(data);
+        }
+
+        if (pricingRes.ok) {
+          const data = await pricingRes.json();
+          const plans = data.plans || [];
+          
+          // Map API response to state
+          setPricing({
+            oneHrStandard: plans.find((p: any) => p.durationHr === 1 && p.includedAdults === 0)?.price || 0,
+            oneHrFamily: plans.find((p: any) => p.durationHr === 1 && p.includedAdults > 0)?.price || 0,
+            twoHrStandard: plans.find((p: any) => p.durationHr === 2 && p.includedAdults === 0)?.price || 0,
+            twoHrFamily: plans.find((p: any) => p.durationHr === 2 && p.includedAdults > 0)?.price || 0,
+            extraAdult: data.extraAdultPrice || 0,
+            isLoaded: true
+          });
+        }
+      } catch (error) {
+        console.error("Failed to fetch configuration", error);
+        toast.error("Failed to load pricing configuration");
+      }
+    };
+
+    fetchConfiguration();
+  }, []);
+
+
+  // --- Calculation Logic (Dynamic) ---
   const numKids = parseInt(kidsCount) || 0;
   const numAdults = parseInt(adultsCount) || 0;
   const discPercent = parseFloat(discountPercent) || 0;
   
-  // --- Pricing state ---
-  let oneHrPrice = numAdults == 0 ? ONE_HR_NO_ADULT : ONE_HR_PRICE;
-  let twoHrPrice = numAdults == 0 ? TWO_HR_NO_ADULT : TWO_HR_PRICE;
+  // Determine Base Price based on Adults presence
+  // If adults present (>0), use Family Price, otherwise Standard Price
+  const oneHrPrice = numAdults === 0 ? pricing.oneHrStandard : pricing.oneHrFamily;
+  const twoHrPrice = numAdults === 0 ? pricing.twoHrStandard : pricing.twoHrFamily;
   
-  // --- Calculation Logic for Session ---
+  // Select price based on duration plan
   const kidPrice = selectedPlan === "1hr" ? oneHrPrice : twoHrPrice;
-  const adultPrice = ADULT_PRICE;
+  const adultPrice = pricing.extraAdult;
   
-  // First 2 adults free
+  // Logic: First 2 adults free per kid
   const chargeableAdults = Math.max(0, numAdults - (numKids * 2));
 
   const totalKidsCost = numKids * kidPrice;
@@ -78,8 +136,6 @@ export default function NewEntry() {
 
   // --- Calculation Logic for Recharge ---
   const balanceToAdd = parseFloat(inputBalance) || 0;
-
-  // Find active offer matching the exact input amount
   const activeOffer = offers.find(
     (o) => o.isActive && o.triggerAmount === balanceToAdd
   );
@@ -87,34 +143,13 @@ export default function NewEntry() {
   const totalBalanceCredit = balanceToAdd + appliedBonus;
 
 
-  // --- Effects ---
-  // Fetch Offers on Mount
-  useEffect(() => {
-    const fetchOffers = async () => {
-      try {
-        const res = await fetch('/api/admin/offers', {
-          headers: { 'Content-Type': 'application/json' }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setOffers(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch offers", error);
-      }
-    };
-    fetchOffers();
-  }, []);
-
   // --- API Integrations ---
 
   const searchCustomer = async (query: string) => {
     if (!query) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/customers?search=${query}`, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const res = await fetch(`/api/customers?search=${query}`);
       if (res.ok) {
         const data = await res.json();
         if (data.length > 0) {
@@ -127,7 +162,6 @@ export default function NewEntry() {
         toast.error("Error fetching customer!")
       }
     } catch (error) {
-      console.error(error);
       toast.error("Network error!")
     } finally {
       setIsLoading(false);
@@ -135,15 +169,10 @@ export default function NewEntry() {
   };
 
   const searchCustomerByUUID = async (uuid: string) => {
-    console.log(`Searching by UUID ${uuid}`)
     if (!uuid) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/customers/by-uuid/?uuid=${uuid}`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
+      const res = await fetch(`/api/customers/by-uuid/?uuid=${uuid}`);
       if (res.ok) {
         const data = await res.json();
         if (data) {
@@ -152,11 +181,8 @@ export default function NewEntry() {
         } else {
           toast.error("No customer found!")
         }
-      } else {
-        toast.error("Error fetching customer!")
       }
     } catch (error) {
-      console.error(error);
       toast.error("Network error!")
     } finally {
       setIsLoading(false);
@@ -170,15 +196,12 @@ export default function NewEntry() {
 
   const handleRecharge = async () => {
     if (!customer || !inputBalance) return;
-
     setIsRecharging(true);
     try {
       const amount = parseFloat(inputBalance);
       const res = await fetch('/api/transactions', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json' 
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: customer.id,
           amount: amount,
@@ -188,17 +211,16 @@ export default function NewEntry() {
       });
 
       const data = await res.json();
-      console.log(data);
       if (res.ok) {
         toast.success("Recharge successful!");
         setCustomer(prev => prev ? { ...prev, currentBalance: data.new_balance } : null);
         setIsBalanceModalOpen(false);
         setInputBalance("");
       } else {
-        alert(data.detail || "Recharge failed");
+        toast.error(data.detail || "Recharge failed");
       }
     } catch (error) {
-      alert("An error occurred during recharge");
+      toast.error("An error occurred during recharge");
     } finally {
       setIsRecharging(false);
     }
@@ -206,19 +228,16 @@ export default function NewEntry() {
 
   const handleStartSession = async () => {
     if (!customer) {
-      alert("Please select a customer first.");
+      toast.error("Please select a customer first.");
       return;
     }
-
     if (customer.currentBalance < finalTotal) {
       setIsInsufficientBalanceModalOpen(true);
       return;
     }
-
     setIsLoading(true);
     try {
       const duration = selectedPlan === "1hr" ? 1 : 2;
-
       const res = await fetch('/api/sessions/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -235,22 +254,29 @@ export default function NewEntry() {
       });
 
       const data = await res.json();
-
       if (res.ok) {
         toast.success("Session started successfully!");
         setCustomer(null);
         setKidsCount("");
         setAdultsCount("");
       } else {
-        alert(data.detail || "Failed to start session");
+        toast.error(data.detail || "Failed to start session");
       }
     } catch (error) {
-      console.error(error);
-      alert("Network error");
+      toast.error("Network error");
     } finally {
       setIsLoading(false);
     }
   };
+
+  // If pricing hasn't loaded, show a loader
+  if (!pricing.isLoaded) {
+    return (
+      <div className="flex h-[50vh] w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -290,7 +316,6 @@ export default function NewEntry() {
               </div>
 
               <button
-                // onClick={() => setIsQrModalOpen(true)}
                 onClick={() => setIsQrModalOpen(true)}
                 className="h-16 w-16 flex items-center justify-center bg-primary hover:bg-primary-hover dark:bg-gray-700 dark:hover:bg-gray-600 text-white dark:text-white font-medium rounded-lg border border-slate-300 dark:border-gray-600 transition-colors"
                 title="Scan QR Code"
@@ -359,7 +384,7 @@ export default function NewEntry() {
                   placeholder="0" type="number" min="0" />
               </div>
               <p className="text-xs text-slate-500 text-right">
-                2 adults per kid free, then ₹100/adult
+                2 adults per kid free, then ₹{pricing.extraAdult}/adult
               </p>
             </div>
 

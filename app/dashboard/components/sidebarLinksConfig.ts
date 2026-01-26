@@ -5,7 +5,7 @@ import {
   CirclePlus,
   HistoryIcon,
   ReceiptIndianRupee,
-  Gift,
+  Settings2,
   Megaphone,
   Cake,
 } from "lucide-react";
@@ -53,9 +53,9 @@ export const sidebarLinks = [
     icon: Megaphone,
   },
   {
-    title: "Bonus Configuration",
-    href: "/dashboard/bonus-config",
-    icon: Gift,
+    title: "Configuration",
+    href: "/dashboard/config",
+    icon: Settings2,
     superAdminOnly: true
   },
 ];

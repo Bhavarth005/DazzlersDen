@@ -10,10 +10,28 @@ type BonusRule = {
   bonusAmount: string;
 };
 
+// New Type for Pricing Data
+type PricingData = {
+  oneHrWithAdult: string;
+  oneHrWithoutAdult: string;
+  twoHrWithAdult: string;
+  twoHrWithoutAdult: string;
+  adultCharge: string;
+};
+
 export default function BonusConfiguration() {
   const [rows, setRows] = useState<BonusRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [pricing, setPricing] = useState<PricingData>({
+    oneHrWithAdult: '',
+    oneHrWithoutAdult: '',
+    twoHrWithAdult: '',
+    twoHrWithoutAdult: '',
+    adultCharge: ''
+  });
+  const [isLoadingPricing, setIsLoadingPricing] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [pricingIds, setPricingIds] = useState<Record<string, number>>({});
 
   const fetchOffers = async () => {
     try {
@@ -39,9 +57,48 @@ export default function BonusConfiguration() {
       setIsFetching(false);
     }
   };
+
+  const fetchPricing = async () => {
+    try {
+      const res = await fetch('/api/pricing');
+      if (res.ok) {
+        const data = await res.json();
+        const plans = data.plans;
+
+        // Extract IDs for saving later
+        const ids: Record<string, number> = {};
+        const findPlan = (dur: number, adults: number) => plans.find((p: any) => p.durationHr === dur && p.includedAdults === adults);
+        
+        const p1Std = findPlan(1, 0);
+        const p1Fam = findPlan(1, 2);
+        const p2Std = findPlan(2, 0);
+        const p2Fam = findPlan(2, 2);
+
+        if (p1Std) ids.oneHrWithoutAdult = p1Std.id;
+        if (p1Fam) ids.oneHrWithAdult = p1Fam.id;
+        if (p2Std) ids.twoHrWithoutAdult = p2Std.id;
+        if (p2Fam) ids.twoHrWithAdult = p2Fam.id;
+        
+        ids.adultCharge = 5; 
+
+        setPricingIds(ids);
+
+        setPricing({
+          oneHrWithoutAdult: p1Std?.price.toString() || '',
+          oneHrWithAdult: p1Fam?.price.toString() || '',
+          twoHrWithoutAdult: p2Std?.price.toString() || '',
+          twoHrWithAdult: p2Fam?.price.toString() || '',
+          adultCharge: data.extraAdultPrice.toString()
+        });
+      }
+    } catch (error) {
+      toast.error("Failed to load pricing");
+    }
+  };
   
   useEffect(() => {
     fetchOffers();
+    fetchPricing();
   }, []);
 
   // 2. Add Row (Use negative ID for local-only rows)
@@ -125,6 +182,50 @@ export default function BonusConfiguration() {
       toast.error("Failed to save changes.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+
+  // --- Pricing Handlers ---
+  const handlePricingChange = (field: keyof PricingData, value: string) => {
+    setPricing(prev => ({ ...prev, [field]: value }));
+  };
+
+  const savePricing = async () => {
+    setIsLoadingPricing(true);
+    try {
+      // Define the payloads based on your API's expected format
+      const payloads = [
+        { id: pricingIds.oneHrWithoutAdult, name: "1 Hr Standard", price: Number(pricing.oneHrWithoutAdult), durationHr: 1.0, includedAdults: 0, type: "PLAN", isActive: true },
+        { id: pricingIds.oneHrWithAdult, name: "1 Hr Family", price: Number(pricing.oneHrWithAdult), durationHr: 1.0, includedAdults: 2, type: "PLAN", isActive: true },
+        { id: pricingIds.twoHrWithoutAdult, name: "2 Hr Standard", price: Number(pricing.twoHrWithoutAdult), durationHr: 2.0, includedAdults: 0, type: "PLAN", isActive: true },
+        { id: pricingIds.twoHrWithAdult, name: "2 Hr Family", price: Number(pricing.twoHrWithAdult), durationHr: 2.0, includedAdults: 2, type: "PLAN", isActive: true },
+        { id: pricingIds.adultCharge, name: "Extra Adult Charge", price: Number(pricing.adultCharge), type: "ADDON", isActive: true }
+      ];
+
+      // Fire all requests. Filtering out any that might be missing an ID.
+      const promises = payloads
+        .filter(p => p.id) 
+        .map(payload => 
+          fetch('/api/admin/pricing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          })
+        );
+
+      const results = await Promise.all(promises);
+      
+      if (results.every(r => r.ok)) {
+        toast.success("All pricing updated successfully!");
+      } else {
+        toast.error("Some updates failed. Please check the data.");
+      }
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Network error while saving pricing");
+    } finally {
+      setIsLoadingPricing(false);
     }
   };
 
@@ -237,7 +338,70 @@ export default function BonusConfiguration() {
           </button>
         </div>
 
+        {/* PRICING CONFIGURATION CARD */}
+        <section className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
+              Price configuration
+            </h2>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+              Set pricing for each session
+            </p>
+          </div>
+          <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="p-6">
+              {/* 2x2 Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <PriceInput label="1 Hour (With Adult)" value={pricing.oneHrWithAdult} onChange={(v) => handlePricingChange('oneHrWithAdult', v)} />
+                <PriceInput label="1 Hour (Without Adult)" value={pricing.oneHrWithoutAdult} onChange={(v) => handlePricingChange('oneHrWithoutAdult', v)} />
+                <PriceInput label="2 Hour (With Adult)" value={pricing.twoHrWithAdult} onChange={(v) => handlePricingChange('twoHrWithAdult', v)} />
+                <PriceInput label="2 Hour (Without Adult)" value={pricing.twoHrWithoutAdult} onChange={(v) => handlePricingChange('twoHrWithoutAdult', v)} />
+              </div>
+
+              <div className="my-6 border-t border-slate-200 dark:border-slate-700" />
+
+              {/* Adult Charge */}
+              <div className="max-w-xs">
+                <PriceInput label="Extra Adult Charge" value={pricing.adultCharge} onChange={(v) => handlePricingChange('adultCharge', v)} />
+              </div>
+            </div>
+          </div>
+          <div className="flex justify-end pt-2">
+
+          <button 
+            onClick={savePricing}
+            disabled={isLoadingPricing}
+            className="px-8 py-3 bg-primary hover:bg-primary-hover text-white font-semibold rounded-lg shadow-lg shadow-blue-500/30 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+          >
+            {isLoadingPricing ? (
+               <span className="material-symbols-outlined animate-spin">progress_activity</span>
+            ) : (
+               <span className="material-symbols-outlined">save</span>
+            )}
+            {isLoading ? "Saving..." : "Save Changes"}
+          </button>
+        </div>
+        </section>
       </div>
     </main>
+  );
+}
+
+// Reusable Input Component
+function PriceInput({ label, value, onChange }: { label: string, value: string, onChange: (v: string) => void }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">{label}</label>
+      <div className="relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₹</span>
+        <input 
+          type="number" 
+          value={value} 
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="0"
+          className="w-full pl-7 pr-3 h-11 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+        />
+      </div>
+    </div>
   );
 }
