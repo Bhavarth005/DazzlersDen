@@ -10,14 +10,22 @@ export async function POST(req: Request) {
 
     if (body.id) {
         // UPDATE
-        const updated = await prisma.pricingPlan.update({
+        const updated = await prisma.pricingPlan.upsert({
             where: { id: body.id },
-            data: {
+            update: {
                 name: body.name,
                 price: parseInt(body.price),
                 durationHr: parseFloat(body.durationHr || 0),
                 includedAdults: parseInt(body.includedAdults || 0),
-                type: body.type || "PLAN", // Allows setting type to ADDON
+                type: body.type || "PLAN",
+                isActive: body.isActive
+            },
+            create: {
+                name: body.name,
+                price: parseInt(body.price),
+                durationHr: parseFloat(body.durationHr || 0),
+                includedAdults: parseInt(body.includedAdults || 0),
+                type: body.type || "PLAN",
                 isActive: body.isActive
             }
         });
