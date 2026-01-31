@@ -43,17 +43,16 @@ export async function generateCompositeQR(
     
     // Sanitize text to prevent SVG breaking
     const safeName = name.replace(/[<>&]/g, '');
-    const safeMobile = `+91 ${mobile}`;
 
     const textSvg = `
       <svg width="${width}" height="${height}">
         <style>
           .title { fill: black; font-size: 44px; font-family: 'Inter', sans-serif; font-weight: bold; }
-          .mobile { fill: black; font-size: 32px; font-family: 'Inter', sans-serif; font-weight: 100; }
           .subtext { fill: black; font-size: 22px; font-family: 'Inter', sans-serif; font-weight: 100; }
         </style>
-        <text x="53" y="212" class="title">${safeName}</text>
-        <text x="53" y="265" class="mobile">${safeMobile}</text>
+        
+        <text x="291" y="212" text-anchor="middle" class="title">${safeName}</text>
+        
         <text x="127" y="904" class="subtext">SCAN THIS QR CODE AT ENTRY</text>
       </svg>
     `;

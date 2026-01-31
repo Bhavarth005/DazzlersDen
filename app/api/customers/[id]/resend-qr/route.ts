@@ -51,15 +51,15 @@ export async function POST(
     }
 
     // 6. Send WhatsApp with the NEW Image URL
-    const result = await resendQRCodeMessage(
-        customer.name,
-        customer.mobileNumber,
-        publicQrUrl // Passing the full URL (e.g., https://.../uuid.png)
-    );
+    // const result = await resendQRCodeMessage(
+    //     customer.name,
+    //     customer.mobileNumber,
+    //     publicQrUrl // Passing the full URL (e.g., https://.../uuid.png)
+    // );
 
-    if (!result.success) {
-        return NextResponse.json({ detail: "Failed to send WhatsApp message" }, { status: 500 });
-    }
+    // if (!result.success) {
+    //     return NextResponse.json({ detail: "Failed to send WhatsApp message" }, { status: 500 });
+    // }
 
     return NextResponse.json({ message: "QR Code regenerated and resent successfully!" });
 
