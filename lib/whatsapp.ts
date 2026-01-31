@@ -7,24 +7,24 @@ const whatsappNumber = process.env.TWILIO_WHATSAPP_NUMBER;
 const client = twilio(accountSid, authToken);
 
 
-export async function sendWelcomeMessage(name: string, mobile: string, qrUuid: string, balance: number) {
+export async function sendWelcomeMessage(
+    name: string, 
+    mobile: string, 
+    qrImageUrl: string, // Changed from uuid to full URL
+    balance: number
+) {
     try {
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            
-            // Use your Content SID
             contentSid: 'HXb730819516e4b0a1eb7f55befb2749fd', 
             contentVariables: JSON.stringify({
                 '1': name,           
-                '2': String(balance) ,
-                '3': qrUuid
+                '2': String(balance),
+                '3': qrImageUrl // Pass the .png URL here
             })
-            
         });
-
-        console.log(`Welcome WhatsApp template sent to ${mobile}`);
-
+        console.log(`Welcome WhatsApp sent to ${mobile}`);
     } catch (error) {
         console.error("Failed to send Welcome WhatsApp:", error);
     }
@@ -106,26 +106,23 @@ export async function sendBroadcastMessage(mobileNumber: string, messageBody: st
   }
 }
 
-export async function resendQRCodeMessage(name: string, mobile: string, qrUuid: string) {
+export async function resendQRCodeMessage(
+    name: string, 
+    mobile: string, 
+    qrImageUrl: string // Changed from uuid to full URL
+) {
     try {
-        const dynamicQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${qrUuid}`;
-
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            
             contentSid: 'HX4af174c452bf514bc93411a5c124d652', 
-            
-           
             contentVariables: JSON.stringify({
                 '1': name,
-                '2': dynamicQrUrl
+                '2': qrImageUrl // Pass the .png URL here
             })
         });
-
         console.log(`Resend QR WhatsApp sent to ${mobile}`);
         return { success: true };
-
     } catch (error) {
         console.error("Failed to resend QR WhatsApp:", error);
         return { success: false, error };

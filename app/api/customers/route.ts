@@ -5,6 +5,7 @@ import { sendWelcomeMessage } from '@/lib/whatsapp';
 import { customerCreateSchema } from '@/lib/schemas';
 import { generateCustomerStatementPDF } from '@/lib/pdfGenerator';
 import { Parser } from 'json2csv';
+import { generateCompositeQR } from '@/lib/qrGenerator';
 
 // Helper for Export formatting
 function toIST(date: Date | string | null) {
@@ -179,11 +180,17 @@ export async function POST(req: Request) {
       return newCustomer;
     });
 
+    const qrCardUrl = await generateCompositeQR(
+      result.qrCodeUuid,
+      result.name,
+      result.mobileNumber
+    );
+
     // 4. Send WhatsApp
     await sendWelcomeMessage(
         result.name, 
         result.mobileNumber, 
-        (result as any).qrCodeUuid, 
+        qrCardUrl, 
         result.currentBalance
     );
 
