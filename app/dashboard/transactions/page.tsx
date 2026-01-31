@@ -11,24 +11,35 @@ import { IndianRupee } from 'lucide-react';
 import { toast } from 'sonner';
 
 // --- HELPER: Date Range Calculator ---
-const getDateRange = (filter: string, customStart: string, customEnd: string) => {
+const formatDate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
+const getDateRange = (
+  filter: string, 
+  customStart: string = "", 
+  customEnd: string = ""
+): { start: string; end: string } => {
   const now = new Date();
   let start = "";
   let end = "";
 
   if (filter === 'Today') {
-    start = now.toISOString().split('T')[0];
+    start = formatDate(now);
     end = start;
   } else if (filter === 'This Month') {
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    start = firstDay.toISOString().split('T')[0];
-    end = lastDay.toISOString().split('T')[0];
+    start = formatDate(firstDay);
+    end = formatDate(lastDay);
   } else if (filter === 'Last Month') {
     const firstDay = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDay = new Date(now.getFullYear(), now.getMonth(), 0);
-    start = firstDay.toISOString().split('T')[0];
-    end = lastDay.toISOString().split('T')[0];
+    start = formatDate(firstDay);
+    end = formatDate(lastDay);
   } else if (filter === 'Custom') {
     start = customStart;
     end = customEnd;
