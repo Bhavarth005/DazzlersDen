@@ -40,6 +40,11 @@ async function fetchAllCustomers(searchTerm: string): Promise<Customer[]> {
 
 export default function CustomerManagement() {
   const router = useRouter();
+  const [superAdmin, setSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    setSuperAdmin(document.cookie.includes("user_role=SUPERADMIN"));
+  }, [])
 
   // -- STATE --
   const [searchTerm, setSearchTerm] = useState('');
@@ -297,10 +302,12 @@ export default function CustomerManagement() {
                     <span className="material-symbols-outlined text-[18px]">select_all</span>
                     <span className="hidden lg:flex">Select All</span>
                   </button>
-                  <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                    <span className="hidden lg:flex">Delete</span>
-                  </button>
+                  {superAdmin &&
+                    <button onClick={() => {setIsDeleteModalOpen(true)}} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      <span className="hidden lg:flex">Delete</span>
+                    </button>
+                  }
                 </div>
               </div>
             ) : (
@@ -352,9 +359,11 @@ export default function CustomerManagement() {
               <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
                 <thead className="bg-slate-50 dark:bg-slate-800">
                   <tr>
-                    <th className="px-6 py-4 w-12.5">
-                      <input type="checkbox" checked={isPageSelected} onChange={togglePageSelection} className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer align-middle" />
-                    </th>
+                    {superAdmin &&
+                      <th className="px-6 py-4 w-12.5">
+                        <input type="checkbox" checked={isPageSelected} onChange={togglePageSelection} className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer align-middle" />
+                      </th>
+                    }
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider w-37.5">ID</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Name</th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Birthdate</th>
@@ -373,6 +382,7 @@ export default function CustomerManagement() {
                       <CustomerRow
                         key={cust.id}
                         customer={cust}
+                        superAdmin={superAdmin}
                         isSelected={selection.selectedIds.includes(cust.id)}
                         onToggle={() => selection.toggleSelection(cust.id)}
                         onEdit={() => setEditingCustomer(cust)}
@@ -397,6 +407,7 @@ export default function CustomerManagement() {
                 <CustomerMobileCard
                   key={cust.id}
                   customer={cust}
+                  superAdmin={superAdmin}
                   isSelected={selection.selectedIds.includes(cust.id)}
                   onToggle={() => selection.toggleSelection(cust.id)}
                   onEdit={() => setEditingCustomer(cust)}

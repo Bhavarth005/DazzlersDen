@@ -3,30 +3,33 @@ import { Customer } from './types';
 type Props = {
   customer: Customer;
   isSelected: boolean;
+  superAdmin: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onQrSend: () => void;
 };
 
-export default function CustomerMobileCard({ customer, isSelected, onToggle, onEdit, onDelete, onQrSend }: Props) {
+export default function CustomerMobileCard({ customer, isSelected, superAdmin, onToggle, onEdit, onDelete, onQrSend }: Props) {
   return (
     <div 
-      onClick={onToggle}
+      onClick={() => {superAdmin ? onToggle() : null}}
       className={`p-4 rounded-lg shadow-sm border flex flex-col gap-4 relative cursor-pointer transition-colors
         ${isSelected 
             ? 'bg-blue-50 dark:bg-blue-900/10 border-primary/50' 
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'}
       `}
     >
-      <div className="absolute top-4 right-4 z-10">
-        <input 
+      {superAdmin &&
+        <div className="absolute top-4 right-4 z-10">
+          <input 
             type="checkbox" 
             checked={isSelected}
             readOnly
             className="w-5 h-5 rounded border-slate-300 text-primary focus:ring-primary pointer-events-none"
-        />
-      </div>
+          />
+        </div>
+      }
 
       <div className="flex items-center justify-between pr-8">
         <div className="flex items-center gap-3">
@@ -58,15 +61,17 @@ export default function CustomerMobileCard({ customer, isSelected, onToggle, onE
         >
           <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>edit</span> Edit
         </button>
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="flex items-center justify-start py-3 px-4 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-red-600 border border-transparent hover:border-red-600 transition-all"
-        >
-          <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>delete</span> Delete
-        </button>
+        {superAdmin &&
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="flex items-center justify-start py-3 px-4 rounded-lg text-sm font-medium bg-slate-50 dark:bg-slate-800 text-red-600 border border-transparent hover:border-red-600 transition-all"
+          >
+            <span className="material-symbols-outlined mr-2" style={{ fontSize: '18px' }}>delete</span> Delete
+          </button>
+        }
         <button 
           onClick={(e) => {
             e.stopPropagation();

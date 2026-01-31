@@ -42,8 +42,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const admin = await getCurrentAdmin(req);
-        // Optional: Only Superadmin can delete customers?
-        // if (admin.role !== 'SUPERADMIN') return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
+        if (admin.role !== 'SUPERADMIN') return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
 
         const { id } = await params;
         await prisma.customer.delete({

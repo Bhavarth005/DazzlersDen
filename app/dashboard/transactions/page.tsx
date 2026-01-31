@@ -38,6 +38,12 @@ const getDateRange = (filter: string, customStart: string, customEnd: string) =>
 };
 
 export default function Transactions() {
+  const [superAdmin, setSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    setSuperAdmin(document.cookie.includes("user_role=SUPERADMIN"));
+  }, [])
+
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -298,10 +304,12 @@ export default function Transactions() {
                     <span className="material-symbols-outlined text-[18px]">select_all</span>
                     <span className="hidden lg:flex">Select All</span>
                   </button>
-                  <button onClick={handleBulkDelete} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
-                    <span className="hidden lg:flex">Delete</span>
-                  </button>
+                  {superAdmin && 
+                    <button onClick={handleBulkDelete} className="flex w-full items-center gap-2 p-4 lg:py-2 lg:px-4 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-md shadow-sm transition-colors">
+                      <span className="material-symbols-outlined text-[18px]">delete</span>
+                      <span className="hidden lg:flex">Delete</span>
+                    </button>
+                  }
                 </div>
               </div>
           ) : (
@@ -454,14 +462,16 @@ export default function Transactions() {
             <table className="w-full text-left border-collapse">
               <thead className="bg-slate-50 dark:bg-slate-800/50 border-b border-[#e7edf4] dark:border-slate-700">
                 <tr>
-                  <th className="px-6 py-4 w-12.5">
-                    <input
-                      type="checkbox"
-                      checked={isPageSelected}
-                      onChange={togglePageSelection}
-                      className="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer"
-                    />
-                  </th>
+                  { superAdmin &&
+                    <th className="px-6 py-4 w-12.5">
+                      <input
+                        type="checkbox"
+                        checked={isPageSelected}
+                        onChange={togglePageSelection}
+                        className="w-4 h-4 rounded border-gray-300 text-primary cursor-pointer"
+                      />
+                    </th>
+                  }
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Txn. ID</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Date & Time</th>
                   <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase">Customer</th>
@@ -482,6 +492,7 @@ export default function Transactions() {
                     <TransactionRow
                       key={txn.id}
                       txn={txn}
+                      superAdmin={superAdmin}
                       isSelected={selection.selectedIds.includes(txn.id)}
                       onToggle={() => selection.toggleSelection(txn.id)}
                     />
@@ -498,6 +509,7 @@ export default function Transactions() {
             <TransactionMobileCard
               key={txn.id}
               txn={txn}
+              superAdmin={superAdmin}
               isSelected={selection.selectedIds.includes(txn.id)}
               onToggle={() => selection.toggleSelection(txn.id)}
             />

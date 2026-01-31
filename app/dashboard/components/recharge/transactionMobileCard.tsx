@@ -3,29 +3,32 @@ import { Transaction } from './types';
 interface Props {
   txn: Transaction;
   isSelected: boolean;
+  superAdmin: boolean;
   onToggle: () => void;
 }
 
-export default function TransactionMobileCard({ txn, isSelected, onToggle }: Props) {
+export default function TransactionMobileCard({ txn, isSelected, superAdmin, onToggle }: Props) {
   const isRecharge = txn.type === 'RECHARGE' || txn.type === "BONUS";
 
   return (
     <div 
-        onClick={onToggle}
+        onClick={() => {superAdmin ? onToggle() : null}}
         className={`p-4 rounded-xl shadow-sm border flex flex-col gap-4 relative cursor-pointer transition-colors
             ${isSelected 
                 ? 'bg-blue-50 dark:bg-blue-900/10 border-primary/50' 
                 : 'bg-white dark:bg-[#1e2836] border-[#e7edf4] dark:border-slate-700'}
         `}
     >
-      <div className="absolute top-4 right-4">
-        <input 
-            type="checkbox" 
-            checked={isSelected}
-            readOnly
-            className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary pointer-events-none"
-        />
-      </div>
+      {superAdmin &&
+        <div className="absolute top-4 right-4">
+          <input 
+              type="checkbox" 
+              checked={isSelected}
+              readOnly
+              className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary pointer-events-none"
+          />
+        </div>
+      }
       
       {/* ... Content (Date, Name, Amount) ... */}
       <div className="flex justify-between items-center pr-8">

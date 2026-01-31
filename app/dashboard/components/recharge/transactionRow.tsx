@@ -2,28 +2,31 @@ import { Transaction } from './types';
 
 interface Props {
   txn: Transaction;
+  superAdmin: boolean;
   isSelected: boolean;
   onToggle: () => void;
 }
 
-export default function TransactionRow({ txn, isSelected, onToggle }: Props) {
+export default function TransactionRow({ txn, isSelected, superAdmin, onToggle }: Props) {
   const isRecharge = txn.type === 'RECHARGE' || txn.type === 'BONUS';
 
   return (
     <tr 
-        onClick={onToggle} 
+        onClick={() => superAdmin ? onToggle() : null} 
         className={`group transition-colors cursor-pointer border-b border-slate-100 dark:border-slate-700/50 
           ${isSelected ? 'bg-blue-50 dark:bg-blue-900/10' : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'}`}
     >
-      <td className="px-6 py-4">
-        <input 
+      {superAdmin &&
+        <td className="px-6 py-4">
+          <input 
             type="checkbox" 
             checked={isSelected}
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
             onChange={() => {}}
             className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer align-middle"
-        />
-      </td>
+          />
+        </td>
+      }
       <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500 dark:text-slate-400">
         {txn.id}
       </td>

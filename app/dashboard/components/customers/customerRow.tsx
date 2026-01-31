@@ -3,32 +3,34 @@ import { Customer } from './types'; // Import the type!
 type Props = {
   customer: Customer;
   isSelected: boolean;
+  superAdmin: boolean;
   onToggle: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onQrSend: () => void;
 };
 
-export default function CustomerRow({ customer, isSelected, onToggle, onEdit, onDelete, onQrSend }: Props) {
+export default function CustomerRow({ customer, isSelected, superAdmin, onToggle, onEdit, onDelete, onQrSend }: Props) {
   return (
     <tr 
-      onClick={onToggle}
+      onClick={() => {superAdmin ? onToggle() : null}}
       className={`group transition-colors cursor-pointer 
         ${isSelected 
             ? 'bg-blue-50 dark:bg-blue-900/10' 
             : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
         }`}
     >
-
-      <td className="px-6 py-4">
-        <input 
-            type="checkbox" 
-            checked={isSelected}
-            onChange={() => {}} 
-            onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer align-middle"
-        />
-      </td>
+      {superAdmin &&
+        <td className="px-6 py-4">
+          <input 
+              type="checkbox" 
+              checked={isSelected}
+              onChange={() => {}} 
+              onClick={(e) => { e.stopPropagation(); onToggle(); }}
+              className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary cursor-pointer align-middle"
+          />
+        </td>
+      }
 
       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-600 dark:text-slate-300">{customer.id}</td>
       <td className="px-6 py-4 whitespace-nowrap">
@@ -50,15 +52,17 @@ export default function CustomerRow({ customer, isSelected, onToggle, onEdit, on
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>edit</span>
           </button>
-          <button 
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete()
-            }} // Stop propagation
-            className="flex items-center justify-center p-2 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
-          </button>
+          { superAdmin &&
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete()
+              }} // Stop propagation
+              className="flex items-center justify-center p-2 rounded-lg text-white bg-red-600 hover:bg-red-700 transition-colors shadow-sm"
+            >
+              <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>delete</span>
+            </button>
+          }
           <button 
             onClick={(e) => {
               e.stopPropagation();

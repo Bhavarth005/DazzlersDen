@@ -5,6 +5,9 @@ import { getCurrentAdmin } from '@/lib/auth';
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const admin = await getCurrentAdmin(req);
+
+    if (admin.role !== 'SUPERADMIN') return NextResponse.json({ detail: "Forbidden" }, { status: 403 });
+
     const { id } = await params;
 
     await prisma.transaction.delete({
