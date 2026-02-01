@@ -5,23 +5,30 @@ import { getCurrentAdmin } from '@/lib/auth';
 // UPDATE Customer (PUT)
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await getCurrentAdmin(req);
+    const admin = await getCurrentAdmin(req);
     const { id } = await params;
     const body = await req.json();
 
-    // 1. Prepare Data Object
     // We only include fields that are actually present in the body (Partial Update)
     const updateData: any = {};
+
+    if (body.currentBalance) {
+      if(admin.role != "SUPERADMIN") {
+        return NextResponse.json({ detail: "Only SUPERADMIN can update balance" }, { status: 403 });
+      }
+
+      updateData.currentBalance = body.currentBalance;
+    }
 
     if (body.name) updateData.name = body.name;
     if (body.mobile_number) updateData.mobileNumber = body.mobile_number; // Map snake_case to camelCase
     
-    // 2. CRITICAL FIX: Convert String to Date
+    // Convert String to Date
     if (body.birthdate) {
         updateData.birthdate = new Date(body.birthdate);
     }
 
-    // 3. Perform Update
+    // Perform Update
     const updatedCustomer = await prisma.customer.update({
       where: { id: parseInt(id) },
       data: updateData

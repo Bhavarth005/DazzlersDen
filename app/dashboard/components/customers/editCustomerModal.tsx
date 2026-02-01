@@ -8,6 +8,7 @@ type Props = {
 };
 
 export default function EditCustomerModal({ customer, onClose, onSave }: Props) {
+  const superAdmin = document.cookie.includes("user_role=SUPERADMIN");
   const [formData, setFormData] = useState(customer);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -44,6 +45,12 @@ export default function EditCustomerModal({ customer, onClose, onSave }: Props) 
             <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Birthdate</label>
             <input type="date" value={formData.birthdate} onChange={(e) => setFormData({...formData, birthdate: e.target.value})} className="w-full px-4 h-11 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"/>
           </div>
+          {superAdmin &&
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Balance</label>
+              <input type="text" value={formData.balance} onChange={(e) => setFormData({...formData, balance: parseInt(e.target.value)})} className="w-full px-4 h-11 rounded-lg border border-slate-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"/>
+            </div>
+          }
           <div className="pt-2 flex gap-3">
              <button type="button" onClick={onClose} className="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-gray-600 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-gray-700 transition-colors">Cancel</button>
              <button type="submit" className="flex-1 px-4 py-2.5 rounded-lg bg-primary hover:bg-primary-hover text-white font-semibold shadow-md shadow-blue-500/20 transition-all active:scale-95">Save Changes</button>

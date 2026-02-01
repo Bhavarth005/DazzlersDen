@@ -238,8 +238,7 @@ export default function CustomerManagement() {
         name: updatedCustomer.name,
         mobile_number: updatedCustomer.mobile, // MAPPED: mobile -> mobile_number
         birthdate: updatedCustomer.birthdate ? new Date(updatedCustomer.birthdate).toISOString() : null,
-        // Note: We usually don't allow editing Balance directly via Edit Profile 
-        // (that should happen via Recharge/Session), so I'm omitting balance here.
+        currentBalance: updatedCustomer.balance
       };
 
       // 3. API Call
@@ -251,7 +250,9 @@ export default function CustomerManagement() {
 
       if (!res.ok) {
         const errorData = await res.json();
-        throw new Error(errorData.detail || "Update failed");
+        alert(errorData.detail || "Update failed");
+        loadData();
+        return;
       }
 
       console.log("Customer updated successfully on server");
