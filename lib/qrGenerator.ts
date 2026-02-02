@@ -76,7 +76,7 @@ export async function generateCompositeQR(
 
     // 6. RETURN PUBLIC URL
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-    return `${baseUrl}/qrcodes/${fileName}`;
+    return `${baseUrl}/api/qrcodes/${fileName}`;
 
   } catch (error) {
     console.error("Error generating composite QR:", error);

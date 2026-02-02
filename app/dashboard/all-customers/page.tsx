@@ -266,13 +266,11 @@ export default function CustomerManagement() {
   };
 
   const handleSendQr = async (id: string) => {
-    const res = await fetch(`/api/customers/${id}/resend-qr`, { method: 'POST', })
-
-    if(!res.ok) {
-      toast.error("Failed to send QR code!");
-    } else {
-      toast.success("QR Code sent successfully!");
-    }
+    toast.promise(fetch(`/api/customers/${id}/resend-qr`, { method: 'POST', }), {
+      loading: "Sending QR Code...",
+      error: (_) => "Failed to send QR Code!",
+      success: (_) => "QR Code sent successfully!"
+    });
   }
 
   return (
