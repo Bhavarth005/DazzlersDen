@@ -17,7 +17,7 @@ export async function sendWelcomeMessage(
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HXb730819516e4b0a1eb7f55befb2749fd', 
+            contentSid: 'HX6f2e04123252d7c4bc835cb5d7ceaefb', 
             contentVariables: JSON.stringify({
                 '1': name,           
                 '2': String(balance),
@@ -34,7 +34,7 @@ export async function sendSessionStartMessage(name: string, mobile: string, cost
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX823dbfb4506389f053925e1fdca274fa',
+            contentSid: 'HX5389ab32294c14bcd785672486191863',
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': guests,
@@ -51,7 +51,7 @@ export async function sendSessionExitMessage(name: string, mobile: string, balan
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HXa802ec0cdda9f2357ab603eacc9a8d02', 
+            contentSid: 'HXfa86646ed9007394aa6f6529d4e11273', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': String(balance)
@@ -68,7 +68,7 @@ export async function sendRechargeMessage(name: string, mobile: string, amount: 
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX894045f3714508fe42f560aeca394ae9', 
+            contentSid: 'HX276d81aed9bb57518ff25b6952aa3a90', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': String(amount),
@@ -93,7 +93,7 @@ export async function sendBroadcastMessage(mobileNumber: string, messageBody: st
     await client.messages.create({
       from: whatsappNumber,
       to: `whatsapp:${formattedNumber}`,
-      contentSid: 'HX4421a8a96b6ad4f197222b3657281628', 
+      contentSid: 'HXb2bcb6e892701d8261eb704afaa84bcb', 
       contentVariables: JSON.stringify({
         '1': messageBody 
       })
@@ -115,7 +115,7 @@ export async function resendQRCodeMessage(
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX4af174c452bf514bc93411a5c124d652', 
+            contentSid: 'HX474a617cc9f180b20bc0c22026d0a60e', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': qrImageUrl // Pass the .png URL here
@@ -135,7 +135,7 @@ export async function sendBirthdayMessage(name: string, mobile: string) {
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX2a8c033c8d7254271c8fc47237d9b34d',
+            contentSid: 'HX3739fd0166cdb78c029dbe8375eed9a2',
             contentVariables: JSON.stringify({
                 '1': name
             })
