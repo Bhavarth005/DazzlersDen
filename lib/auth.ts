@@ -23,7 +23,7 @@ export const createToken = (username: string) => {
   return jwt.sign({ sub: username }, SECRET_KEY, { expiresIn: '720m' }); //  12 hrs = 720m
 };
 
-export async function getCurrentAdmin(request: Request) {
+export async function getCurrentAdmin(request?: Request) {
   const cookieStore = await cookies();
   const authHeader = cookieStore.get("Authorization")?.value;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
