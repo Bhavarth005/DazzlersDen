@@ -20,7 +20,7 @@ export async function generateCompositeQR(
     const baseImagePath = path.join(process.cwd(), 'assets', 'base.png');
     
     // Output image lives in root/public/qrcodes (Public)
-    const publicDir = path.join(process.cwd(), 'public', 'qrcodes');
+    const publicDir = path.join(process.cwd(), 'public', '_qrcodes');
     ensureDirectory(publicDir);
     
     const fileName = `${uuid}.png`;
