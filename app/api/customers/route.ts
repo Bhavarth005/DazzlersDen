@@ -116,7 +116,7 @@ export async function POST(req: Request) {
     const body = customerCreateSchema.parse(rawBody);
     
     // Extract paymentMode directly from rawBody (Defaults to CASH)
-    const paymentMode = (rawBody as any).paymentMode || "CASH";
+    const paymentMode = (rawBody as any).payment_mode || "CASH";
     
     // 1. Check duplicate mobile
     const existing = await prisma.customer.findUnique({
