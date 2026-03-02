@@ -17,11 +17,11 @@ export async function sendWelcomeMessage(
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX6f2e04123252d7c4bc835cb5d7ceaefb', 
+            contentSid: 'HX25e12f14a817ea6c88f37a1c7b813c6b', 
             contentVariables: JSON.stringify({
                 '1': name,           
                 '2': String(balance),
-                '3': qrImageUrl // Pass the .png URL here
+                '3': qrImageUrl
             })
         });
         console.log(`Welcome WhatsApp sent to ${mobile}`);
@@ -34,7 +34,7 @@ export async function sendSessionStartMessage(name: string, mobile: string, cost
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX5389ab32294c14bcd785672486191863',
+            contentSid: 'HXaf197385ffc7059b43f8d23d490c84ec',
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': guests,
@@ -51,7 +51,7 @@ export async function sendSessionExitMessage(name: string, mobile: string, balan
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HXfa86646ed9007394aa6f6529d4e11273', 
+            contentSid: 'HX3115de4191e0c6785a92e14f82062ea4', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': String(balance)
@@ -68,7 +68,7 @@ export async function sendRechargeMessage(name: string, mobile: string, amount: 
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX276d81aed9bb57518ff25b6952aa3a90', 
+            contentSid: 'HX6759b38b0022f91724a8b00ab36ca781', 
             contentVariables: JSON.stringify({
                 '1': name,
                 '2': String(amount),
@@ -115,10 +115,10 @@ export async function resendQRCodeMessage(
         await client.messages.create({
             from: whatsappNumber,
             to: `whatsapp:+91${mobile}`,
-            contentSid: 'HX474a617cc9f180b20bc0c22026d0a60e', 
+            contentSid: 'HX0b86722ac15632825ccd6e64e8fa432f', 
             contentVariables: JSON.stringify({
                 '1': name,
-                '2': qrImageUrl // Pass the .png URL here
+                '2': qrImageUrl
             })
         });
         console.log(`Resend QR WhatsApp sent to ${mobile}`);
